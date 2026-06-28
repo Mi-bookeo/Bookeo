@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookeo · Libros de fotos con vídeos QR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #7db898;
+  --green-dark: #5a9a7a;
+  --green-light: #e8f3ee;
+  --green-pale: #f4faf7;
+  --charcoal: #3a3a3a;
+  --charcoal-light: #5a5a5a;
+  --yellow: #f0d060;
+  --red: #e05040;
+  --blue: #4070c0;
+  --cream: #fdfcf8;
+  --cream-dark: #f5f2ea;
+  --white: #ffffff;
+  --shadow: 0 20px 60px rgba(0,0,0,0.1);
+  --shadow-sm: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════════════
+   NAV
+══════════════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(253,252,248,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(125,184,152,0.2);
+  padding: 0 5%;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: box-shadow .3s;
+}
+nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.nav-logo img { height: 48px; width: auto; display: block; }
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  text-decoration: none;
+  color: var(--charcoal-light);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--green-dark); }
+
+.nav-cta {
+  background: var(--green);
+  color: white;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .25s;
+  white-space: nowrap;
+}
+.nav-cta:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(125,184,152,0.4); }
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  padding: 80px 5% 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -200px; right: -200px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(125,184,152,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green-light);
+  color: var(--green-dark);
+  border-radius: 50px;
+  padding: 6px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  animation: fadeUp .6s ease both;
+}
+.hero-badge::before { content: '✦'; font-size: 0.7rem; }
+
+.hero h1 {
+  font-family: 'Lora', serif;
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  line-height: 1.18;
+  color: var(--charcoal);
+  margin-bottom: 20px;
+  animation: fadeUp .6s .1s ease both;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--green-dark);
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--charcoal-light);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 480px;
+  animation: fadeUp .6s .2s ease both;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  animation: fadeUp .6s .3s ease both;
+}
+
+.btn-primary {
+  background: var(--green);
+  color: white;
+  padding: 15px 32px;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all .25s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(125,184,152,0.35);
+}
+.btn-primary:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(125,184,152,0.45); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--charcoal);
+  padding: 15px 28px;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1.5px solid #ddd;
+  transition: all .25s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-secondary:hover { border-color: var(--green); color: var(--green-dark); }
+
+.hero-trust {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+  animation: fadeUp .6s .4s ease both;
+}
+.trust-avatars {
+  display: flex;
+}
+.trust-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid white;
+  margin-left: -8px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.trust-avatar:first-child { margin-left: 0; }
+.trust-text { font-size: 0.78rem; color: var(--charcoal-light); line-height: 1.4; }
+.trust-text strong { color: var(--charcoal); display: block; }
+.stars { color: #f5b400; font-size: 0.75rem; }
+
+/* Hero visual */
+.hero-visual {
+  position: relative;
+  animation: fadeUp .7s .15s ease both;
+}
+
+.book-mockup {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.book-card {
+  background: var(--charcoal);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  aspect-ratio: 4/3;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.book-photo-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+}
+
+.book-photo {
+  overflow: hidden;
+}
+.book-photo:first-child { grid-row: 1 / 3; }
+
+.photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.book-overlay {
+  position: relative;
+  background: linear-gradient(transparent, rgba(26,26,26,0.85));
+  padding: 24px 20px 20px;
+  z-index: 2;
+}
+.book-overlay h3 {
+  font-family: 'Lora', serif;
+  color: white;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+.book-overlay p { color: rgba(255,255,255,0.65); font-size: 0.75rem; }
+
+.qr-chip {
+  position: absolute;
+  top: 16px; right: 16px;
+  background: white;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 3;
+  text-align: center;
+}
+.qr-mini {
+  width: 48px; height: 48px;
+  background: var(--charcoal);
+  border-radius: 4px;
+  display: grid;
+  grid-template-columns: repeat(6,1fr);
+  grid-template-rows: repeat(6,1fr);
+  gap: 1px;
+  padding: 4px;
+  margin-bottom: 4px;
+}
+.qr-cell { background: white; border-radius: 1px; }
+.qr-cell.dark { background: var(--charcoal); }
+.qr-chip span { font-size: 0.55rem; color: var(--charcoal-light); display: block; }
+
+/* Floating cards */
+.float-card {
+  position: absolute;
+  background: white;
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  font-size: 0.78rem;
+  animation: float 4s ease-in-out infinite;
+}
+.float-card-1 {
+  bottom: -20px; left: -30px;
+  animation-delay: 0s;
+}
+.float-card-2 {
+  top: 20px; left: -40px;
+  animation-delay: 2s;
+}
+.float-card .fc-icon { font-size: 1.2rem; margin-bottom: 4px; }
+.float-card .fc-label { color: var(--charcoal-light); font-size: 0.68rem; }
+.float-card .fc-value { color: var(--charcoal); font-weight: 700; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ══════════════════════════════════════
+   EMOTIONAL STRIP
+══════════════════════════════════════ */
+.emotion-strip {
+  background: var(--charcoal);
+  padding: 28px 5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 50px;
+  flex-wrap: wrap;
+}
+.emotion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.85rem;
+}
+.emotion-item span:first-child { font-size: 1.4rem; }
+.emotion-item strong { color: white; display: block; font-size: 0.9rem; }
+
+/* ══════════════════════════════════════
+   HOW IT WORKS
+══════════════════════════════════════ */
+.section { padding: 90px 5%; }
+.section-label {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green-dark);
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  text-align: center;
+  color: var(--charcoal);
+  line-height: 1.25;
+  margin-bottom: 14px;
+}
+.section-sub {
+  text-align: center;
+  color: var(--charcoal-light);
+  font-size: 1rem;
+  max-width: 520px;
+  margin: 0 auto 60px;
+  line-height: 1.65;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 36px; left: calc(16.66% + 20px); right: calc(16.66% + 20px);
+  height: 2px;
+  background: linear-gradient(90deg, var(--green-light), var(--green), var(--green-light));
+}
+
+.step {
+  text-align: center;
+  position: relative;
+}
+.step-icon {
+  width: 72px; height: 72px;
+  background: var(--green-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin: 0 auto 20px;
+  position: relative;
+  z-index: 1;
+  transition: transform .3s;
+}
+.step:hover .step-icon { transform: scale(1.08); }
+.step-num {
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 22px; height: 22px;
+  background: var(--green);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.step h3 { font-size: 1rem; margin-bottom: 8px; color: var(--charcoal); }
+.step p { font-size: 0.85rem; color: var(--charcoal-light); line-height: 1.6; }
+
+/* ══════════════════════════════════════
+   EMOTIONAL SECTION
+══════════════════════════════════════ */
+.emotional {
+  background: var(--cream-dark);
+  padding: 90px 5%;
+}
+
+.emotion-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.emotion-card {
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 3/4;
+  cursor: pointer;
+  transition: transform .35s;
+}
+.emotion-card:hover { transform: translateY(-6px); }
+.emotion-card:first-child { grid-row: 1/3; aspect-ratio: auto; }
+
+.emotion-card-bg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+.emotion-card-content {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(26,26,26,0.85) 0%, transparent 55%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+}
+.emotion-tag {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+  color: white;
+  border-radius: 50px;
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  width: fit-content;
+}
+.emotion-card-content h3 {
+  font-family: 'Lora', serif;
+  color: white;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.emotion-card-content p {
+  color: rgba(255,255,255,0.7);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════
+   QR FEATURE
+══════════════════════════════════════ */
+.qr-feature {
+  padding: 90px 5%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.qr-visual {
+  position: relative;
+}
+
+.qr-phone {
+  width: 220px;
+  height: 380px;
+  background: var(--charcoal);
+  border-radius: 36px;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.qr-phone::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  width: 60px; height: 6px;
+  background: #555;
+  border-radius: 10px;
+  z-index: 2;
+}
+.qr-phone-screen {
+  position: absolute;
+  inset: 12px;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #111;
+}
+.phone-video-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+.qr-book-corner {
+  position: absolute;
+  bottom: -20px; right: 10px;
+  width: 130px;
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.qr-book-corner .mini-qr {
+  width: 50px; height: 50px;
+  background: var(--charcoal);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.qr-book-corner p { font-size: 0.68rem; color: var(--charcoal-light); line-height: 1.4; }
+.qr-book-corner strong { color: var(--charcoal); font-size: 0.72rem; }
+
+.feature-badge-wrap {
+  position: absolute;
+  top: 20px; left: -20px;
+}
+.feature-badge {
+  background: var(--green);
+  color: white;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.4;
+  box-shadow: 0 4px 16px rgba(125,184,152,0.4);
+}
+.feature-badge span { display: block; font-weight: 400; opacity: 0.85; }
+
+.qr-content h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.7rem, 2.5vw, 2.3rem);
+  line-height: 1.25;
+  margin-bottom: 18px;
+  color: var(--charcoal);
+}
+.qr-content p {
+  color: var(--charcoal-light);
+  line-height: 1.7;
+  margin-bottom: 28px;
+  font-size: 0.95rem;
+}
+
+.feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+.feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--charcoal);
+}
+.feature-list li::before {
+  content: '✓';
+  width: 22px; height: 22px;
+  min-width: 22px;
+  background: var(--green-light);
+  color: var(--green-dark);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+/* ══════════════════════════════════════
+   PRICING
+══════════════════════════════════════ */
+.pricing {
+  background: var(--cream-dark);
+  padding: 90px 5%;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.pricing-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px 28px;
+  position: relative;
+  border: 2px solid transparent;
+  transition: all .3s;
+  box-shadow: var(--shadow-sm);
+}
+.pricing-card:hover { border-color: var(--green); transform: translateY(-4px); }
+.pricing-card.featured {
+  border-color: var(--green);
+  background: var(--charcoal);
+  color: white;
+}
+.pricing-card.featured:hover { transform: translateY(-6px); }
+
+.pricing-popular {
+  position: absolute;
+  top: -14px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+  color: white;
+  border-radius: 50px;
+  padding: 4px 16px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pricing-size {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--green-dark);
+  margin-bottom: 8px;
+}
+.pricing-card.featured .pricing-size { color: var(--green); }
+
+.pricing-name {
+  font-family: 'Lora', serif;
+  font-size: 1.4rem;
+  margin-bottom: 6px;
+}
+.pricing-card.featured .pricing-name { color: white; }
+
+.pricing-desc {
+  font-size: 0.8rem;
+  color: var(--charcoal-light);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+.pricing-card.featured .pricing-desc { color: rgba(255,255,255,0.6); }
+
+.pricing-price {
+  margin-bottom: 8px;
+}
+.pricing-amount {
+  font-family: 'Lora', serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  line-height: 1;
+}
+.pricing-card.featured .pricing-amount { color: white; }
+.pricing-currency {
+  font-size: 1.2rem;
+  vertical-align: top;
+  margin-top: 8px;
+  display: inline-block;
+  color: var(--charcoal-light);
+}
+.pricing-card.featured .pricing-currency { color: rgba(255,255,255,0.7); }
+
+.pricing-pages {
+  font-size: 0.78rem;
+  color: var(--charcoal-light);
+  margin-bottom: 24px;
+}
+.pricing-card.featured .pricing-pages { color: rgba(255,255,255,0.55); }
+
+/* Page adder */
+.page-adder {
+  background: var(--green-pale);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+.pricing-card.featured .page-adder { background: rgba(255,255,255,0.08); }
+.page-adder-label {
+  font-size: 0.72rem;
+  color: var(--charcoal-light);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.pricing-card.featured .page-adder-label { color: rgba(255,255,255,0.5); }
+.page-adder-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--green);
+  background: transparent;
+  color: var(--green-dark);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s;
+  font-weight: 700;
+}
+.page-btn:hover { background: var(--green); color: white; }
+.pricing-card.featured .page-btn { border-color: rgba(255,255,255,0.4); color: white; }
+.pricing-card.featured .page-btn:hover { background: var(--green); border-color: var(--green); }
+.page-count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  flex: 1;
+  text-align: center;
+}
+.pricing-card.featured .page-count { color: white; }
+.page-extra-price {
+  font-size: 0.72rem;
+  color: var(--green-dark);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pricing-card.featured .page-extra-price { color: var(--green); }
+
+.pricing-total {
+  font-size: 0.8rem;
+  color: var(--charcoal-light);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pricing-card.featured .pricing-total { color: rgba(255,255,255,0.6); }
+.pricing-total-amount {
+  font-weight: 700;
+  color: var(--charcoal);
+  font-size: 1rem;
+}
+.pricing-card.featured .pricing-total-amount { color: white; }
+
+.pricing-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 28px;
+}
+.pricing-features li {
+  font-size: 0.8rem;
+  color: var(--charcoal-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pricing-card.featured .pricing-features li { color: rgba(255,255,255,0.65); }
+.pricing-features li::before {
+  content: '✓';
+  color: var(--green);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.pricing-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 50px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .25s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: center;
+  display: block;
+  text-decoration: none;
+}
+.pricing-btn-outline {
+  background: transparent;
+  border: 2px solid #ddd;
+  color: var(--charcoal);
+}
+.pricing-btn-outline:hover { border-color: var(--green); color: var(--green-dark); }
+.pricing-btn-fill {
+  background: var(--green);
+  color: white;
+  box-shadow: 0 4px 16px rgba(125,184,152,0.4);
+}
+.pricing-btn-fill:hover { background: var(--green-dark); transform: translateY(-1px); }
+
+.pricing-note {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 0.8rem;
+  color: var(--charcoal-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ══════════════════════════════════════
+   TESTIMONIALS
+══════════════════════════════════════ */
+.testimonials { padding: 90px 5%; }
+
+.testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.testimonial-card {
+  background: white;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  transition: transform .3s;
+}
+.testimonial-card:hover { transform: translateY(-4px); }
+
+.t-stars { color: #f5b400; font-size: 0.85rem; margin-bottom: 14px; }
+.t-quote {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--charcoal);
+  line-height: 1.65;
+  margin-bottom: 20px;
+}
+.t-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.t-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-light);
+}
+.t-name { font-weight: 600; font-size: 0.85rem; }
+.t-meta { font-size: 0.72rem; color: var(--charcoal-light); }
+
+/* ══════════════════════════════════════
+   FINAL CTA
+══════════════════════════════════════ */
+.final-cta {
+  background: var(--charcoal);
+  padding: 100px 5%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.final-cta::before {
+  content: '';
+  position: absolute;
+  top: -150px; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(125,184,152,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.final-cta h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: white;
+  margin-bottom: 16px;
+  position: relative;
+}
+.final-cta h2 em { color: var(--green); font-style: italic; }
+.final-cta p {
+  color: rgba(255,255,255,0.6);
+  font-size: 1rem;
+  max-width: 480px;
+  margin: 0 auto 40px;
+  line-height: 1.65;
+  position: relative;
+}
+.final-cta .btn-primary { font-size: 1.05rem; padding: 17px 40px; position: relative; }
+
+.color-strips {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-top: 60px;
+}
+.strip { height: 4px; width: 80px; }
+.strip-y { background: var(--yellow); }
+.strip-r { background: var(--red); }
+.strip-b { background: var(--blue); }
+
+/* ══════════════════════════════════════
+   FOOTER
+══════════════════════════════════════ */
+footer {
+  background: #2a2a2a;
+  padding: 40px 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+footer .footer-logo-img {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+footer p {
+  color: rgba(255,255,255,0.4);
+  font-size: 0.78rem;
+}
+footer .footer-links {
+  display: flex;
+  gap: 22px;
+  list-style: none;
+  align-items: center;
+  flex-wrap: wrap;
+}
+footer .footer-links a {
+  color: rgba(255,255,255,0.45);
+  text-decoration: none;
+  font-size: 0.78rem;
+  transition: color .2s;
+}
+footer .footer-links a:hover { color: var(--green); }
+footer .footer-sep { color: rgba(255,255,255,0.2); }
+
+/* ══════════════════════════════════════
+   MICROCLIPS
+══════════════════════════════════════ */
+.microclips{padding:88px 5%;background:var(--charcoal);position:relative;overflow:hidden}
+.microclips::before{content:'';position:absolute;top:-160px;right:-160px;width:520px;height:520px;background:radial-gradient(circle,rgba(125,184,152,.1) 0%,transparent 68%);pointer-events:none}
+.microclips-inner{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;max-width:1100px;margin:0 auto}
+.microclips-content .section-label{color:var(--green);text-align:left}
+.microclips-content .section-title{color:white;text-align:left}
+.microclips-content .section-title em{font-style:italic;color:var(--green)}
+.microclips-content p{color:rgba(255,255,255,.64);font-size:.94rem;line-height:1.78;margin-bottom:20px}
+.mc-checklist{list-style:none;display:flex;flex-direction:column;gap:13px;margin-bottom:34px}
+.mc-checklist li{display:flex;align-items:flex-start;gap:11px;font-size:.88rem;color:rgba(255,255,255,.78);line-height:1.55}
+.mc-checklist li::before{content:'✓';width:21px;height:21px;min-width:21px;background:rgba(125,184,152,.18);color:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;margin-top:1px}
+.microclips-photo{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.microclips-photo img{width:100%;height:380px;object-fit:cover;display:block}
+.microclips-photo-overlay{position:absolute;inset:0;background:linear-gradient(transparent 42%,rgba(0,0,0,.72))}
+.microclips-photo-caption{position:absolute;bottom:22px;left:22px;right:22px}
+.microclips-photo-caption h4{font-family:'Lora',serif;font-style:italic;color:white;font-size:1.05rem;margin-bottom:6px}
+.microclips-photo-caption p{color:rgba(255,255,255,.65);font-size:.76rem;line-height:1.5}
+.mc-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(125,184,152,.22);border:1px solid rgba(125,184,152,.35);color:var(--green);border-radius:50px;padding:4px 12px;font-size:.68rem;font-weight:700;margin-bottom:12px}
+@media(max-width:768px){.microclips-inner{grid-template-columns:1fr;gap:40px}.microclips-photo img{height:260px}}
+
+/* ══════════════════════════════════════
+   CAROUSEL
+══════════════════════════════════════ */
+.carousel-wrap {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  overflow: hidden;
+  margin-top: 68px;
+}
+.carousel-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.carousel-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.carousel-slide.active { opacity: 1; }
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.carousel-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(26,26,26,0.15) 0%,
+    rgba(26,26,26,0.72) 100%
+  );
+  pointer-events: none;
+}
+.carousel-caption {
+  position: absolute;
+  bottom: 70px;
+  left: 5%;
+  animation: fadeUp .6s ease both;
+}
+.carousel-tag {
+  display: inline-block;
+  background: rgba(125,184,152,0.85);
+  backdrop-filter: blur(8px);
+  color: white;
+  border-radius: 50px;
+  padding: 8px 20px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.carousel-caption p {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  color: white;
+  font-style: italic;
+  font-weight: 600;
+  text-shadow: 0 3px 20px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5);
+  max-width: 680px;
+  line-height: 1.2;
+}
+.carousel-dots {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+.cdot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.4);
+  cursor: pointer;
+  transition: all .3s;
+  padding: 0;
+}
+.cdot.active {
+  background: white;
+  width: 24px;
+  border-radius: 4px;
+}
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all .25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.carousel-arrow:hover { background: rgba(255,255,255,0.3); }
+.carousel-prev { left: 20px; }
+.carousel-next { right: 20px; }
+
+/* Progress bar under carousel */
+.carousel-progress {
+  height: 3px;
+  background: var(--green-light);
+  overflow: hidden;
+}
+.carousel-progress-fill {
+  height: 100%;
+  background: var(--green);
+  width: 0%;
+  transition: width linear;
+}
+
+@media (max-width: 768px) {
+  .carousel-wrap { height: 300px; margin-top: 68px; }
+  .carousel-caption p { font-size: 1.1rem; }
+}
+
+/* ══════════════════════════════════════
+   MODAL — CÓMO FUNCIONA
+══════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,26,46,0.75);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s ease;
+}
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal {
+  background: var(--cream);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 560px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+  transform: translateY(30px) scale(0.97);
+  transition: transform .35s cubic-bezier(.175,.885,.32,1.1);
+}
+.modal-overlay.show .modal {
+  transform: none;
+}
+.modal-header {
+  background: var(--dark);
+  padding: 28px 32px 24px;
+  position: relative;
+}
+.modal-header h2 {
+  font-family: 'Lora', serif;
+  color: var(--gold-light);
+  font-size: 1.35rem;
+  margin-bottom: 6px;
+}
+.modal-header p {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.82rem;
+}
+.modal-close {
+  position: absolute;
+  top: 20px; right: 20px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.2); }
+
+.modal-body { padding: 28px 32px; }
+
+/* Pasos */
+.modal-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.modal-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.modal-step-icon {
+  width: 46px; height: 46px;
+  min-width: 46px;
+  background: var(--green-light);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+.modal-step-content h4 {
+  font-size: 0.95rem;
+  color: var(--charcoal);
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+.modal-step-content p {
+  font-size: 0.8rem;
+  color: var(--charcoal-light);
+  line-height: 1.55;
+}
+
+/* Drive box dentro del modal */
+.modal-drive-box {
+  background: #f0fff5;
+  border: 1.5px solid var(--green);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+.modal-drive-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+}
+.modal-drive-title svg { flex-shrink: 0; }
+.modal-drive-desc {
+  font-size: 0.8rem;
+  color: var(--charcoal-light);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.modal-drive-note {
+  font-size: 0.72rem;
+  color: #555;
+  line-height: 1.55;
+  background: rgba(125,184,152,0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.modal-drive-note strong { color: var(--charcoal); }
+
+.modal-cta {
+  width: 100%;
+  padding: 15px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .25s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(125,184,152,0.35);
+}
+.modal-cta:hover {
+  background: var(--green-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(125,184,152,0.4);
+}
+.modal-tutorial {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--charcoal-light);
+  border: 1.5px solid #ddd;
+  border-radius: 50px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .25s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  margin-top: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.modal-tutorial:hover { border-color: var(--green); color: var(--green-dark); }
+.tutorial-ico {
+  width: 26px;
+  height: 26px;
+  background: var(--green-light);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--green-dark);
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .modal-header, .modal-body { padding: 22px 20px; }
+  .modal-header h2 { font-size: 1.1rem; }
+}
+
+/* ══════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .hero { grid-template-columns: 1fr; padding-top: 90px; gap: 40px; }
+  .hero-visual { order: -1; }
+  .steps { grid-template-columns: 1fr; }
+  .steps::before { display: none; }
+  .emotion-grid { grid-template-columns: 1fr 1fr; }
+  .emotion-card:first-child { grid-column: 1/3; aspect-ratio: 16/9; }
+  .qr-feature { grid-template-columns: 1fr; gap: 40px; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+  .testimonial-grid { grid-template-columns: 1fr; max-width: 400px; }
+  .nav-links { display: none; }
+  footer { flex-direction: column; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="/" class="nav-logo"><img src="data:image/png;base64,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" alt="Bookeo" style="height:48px;width:auto;display:block;"></a>
+  <ul class="nav-links">
+    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#qr-videos">Vídeos QR</a></li>
+    <li><a href="#precios">Precios</a></li>
+    <li><a href="#opiniones">Opiniones</a></li>
+  </ul>
+  <a href="#precios" onclick="scrollToPrecios(event)" class="nav-cta">Crear mi álbum →</a>
+</nav>
+
+<!-- CAROUSEL -->
+<div class="carousel-wrap">
+  <div class="carousel-track" id="carouselTrack">
+    <div class="carousel-slide active"><img src="https://images.unsplash.com/photo-1609220136736-443140cffec6?w=1400&q=85&fit=crop" alt="Familia"><div class="carousel-caption"><span class="carousel-tag">👨‍👩‍👧 Familia</span><p>Momentos que merecen algo más que una pantalla</p></div></div>
+    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1400&q=85&fit=crop" alt="Viaje"><div class="carousel-caption"><span class="carousel-tag">✈️ Viajes</span><p>Tu gran viaje, contado página a página</p></div></div>
+    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=1400&q=85&fit=crop" alt="Bebé"><div class="carousel-caption"><span class="carousel-tag">👶 Bebés</span><p>El primer año de tu hijo, para siempre</p></div></div>
+    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1400&q=85&fit=crop" alt="Boda"><div class="carousel-caption"><span class="carousel-tag">💍 Bodas</span><p>El regalo que ningún invitado olvidará</p></div></div>
+    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=1400&q=85&fit=crop" alt="Verano"><div class="carousel-caption"><span class="carousel-tag">☀️ Verano</span><p>Las fotos del verano merecen un libro</p></div></div>
+  </div>
+  <div class="carousel-overlay"></div>
+  <button class="carousel-arrow carousel-prev" onclick="moveSlide(-1)">‹</button>
+  <button class="carousel-arrow carousel-next" onclick="moveSlide(1)">›</button>
+  <div class="carousel-dots"><button class="cdot active" onclick="goSlide(0)"></button><button class="cdot" onclick="goSlide(1)"></button><button class="cdot" onclick="goSlide(2)"></button><button class="cdot" onclick="goSlide(3)"></button><button class="cdot" onclick="goSlide(4)"></button></div>
+</div>
+<div class="carousel-progress"><div class="carousel-progress-fill" id="cpFill"></div></div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Novedad · Vídeos QR incluidos gratis</div>
+    <h1>El libro de fotos que <em>también se mueve</em></h1>
+    <p class="hero-sub">Convierte tus mejores momentos en un libro físico que, al escanearlo, reproduce los vídeos de ese día. Para tus hijos, tus viajes, tu familia. Para siempre.</p>
+    <div class="hero-actions">
+      <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Crear mi álbum ahora</a>
+      <button class="btn-secondary" onclick="abrirModal()">▶ ¿Cómo funciona?</button>
+    </div>
+    <div class="hero-trust">
+      <div class="trust-avatars">
+        <div class="trust-avatar" style="background:#e8f3ee">👩</div>
+        <div class="trust-avatar" style="background:#f3e8ee">👨</div>
+        <div class="trust-avatar" style="background:#e8eef3">👩</div>
+        <div class="trust-avatar" style="background:#f3f3e8">👨</div>
+      </div>
+      <div class="trust-text">
+        <span class="stars">★★★★★</span>
+        <strong>+500 familias ya lo tienen</strong>
+        Valoración media 4.9/5
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="float-card float-card-2">
+      <div class="fc-icon">📅</div>
+      <div class="fc-label">Ordenado automático</div>
+      <div class="fc-value">por fecha y hora</div>
+    </div>
+
+    <div class="book-mockup">
+      <div class="book-card">
+        <div class="book-photo-grid">
+          <div class="book-photo">
+            <img src="https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=600&q=80&fit=crop" class="photo-placeholder" alt="Familia en la playa" style="object-fit:cover;width:100%;height:100%;">
+          </div>
+          <div class="book-photo">
+            <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=300&q=80&fit=crop" class="photo-placeholder" alt="Viaje montaña" style="object-fit:cover;width:100%;height:100%;">
+          </div>
+          <div class="book-photo">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80&fit=crop" class="photo-placeholder" alt="Playa atardecer" style="object-fit:cover;width:100%;height:100%;">
+          </div>
+        </div>
+        <div class="book-overlay">
+          <h3>Verano en familia · 2024</h3>
+          <p>23 fotos · 3 vídeos QR incluidos</p>
+        </div>
+        <div class="qr-chip">
+          <div class="qr-mini">
+            <div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div>
+            <div class="qr-cell dark"></div><div class="qr-cell"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell"></div><div class="qr-cell dark"></div>
+            <div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell"></div>
+            <div class="qr-cell"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div>
+            <div class="qr-cell dark"></div><div class="qr-cell"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell"></div><div class="qr-cell dark"></div>
+            <div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div><div class="qr-cell dark"></div>
+          </div>
+          <span>▶ Ver vídeo</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="float-card float-card-1">
+      <div class="fc-icon">📱</div>
+      <div class="fc-label">QR que reproduce</div>
+      <div class="fc-value">tu vídeo de ese día</div>
+    </div>
+  </div>
+</section>
+
+<!-- EMOTIONAL STRIP -->
+<div class="emotion-strip">
+  <div class="emotion-item"><span>👶</span><div><strong>Primeros pasos</strong>que no se borran nunca</div></div>
+  <div class="emotion-item"><span>✈️</span><div><strong>Viajes especiales</strong>revívelos cuando quieras</div></div>
+  <div class="emotion-item"><span>👨‍👩‍👧‍👦</span><div><strong>Reuniones familiares</strong>con todos en el mismo libro</div></div>
+  <div class="emotion-item"><span>💍</span><div><strong>Bodas y celebraciones</strong>el regalo perfecto</div></div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="como-funciona">
+  <div class="section-label">Simple y rápido</div>
+  <h2 class="section-title">Tu libro listo en minutos,<br>en casa en días</h2>
+  <p class="section-sub">No hace falta ordenar nada. Nuestra IA lee la fecha de cada foto y lo organiza todo automáticamente.</p>
+
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-icon">📷<div class="step-num">1</div></div>
+      <h3>Sube tus fotos y vídeos</h3>
+      <p>Todo en un paso. Nuestra IA lee los metadatos, ordena por fecha y hora, y agrupa por días automáticamente.</p>
+    </div>
+    <div class="step reveal" style="transition-delay:.15s">
+      <div class="step-icon">✨<div class="step-num">2</div></div>
+      <h3>Revisa y personaliza</h3>
+      <p>Visualiza tu libro al instante. Cambia textos, reordena fotos o añade páginas extra con un clic.</p>
+    </div>
+    <div class="step reveal" style="transition-delay:.3s">
+      <div class="step-icon">📦<div class="step-num">3</div></div>
+      <h3>Lo recibas en casa</h3>
+      <p>Impresión de alta calidad enviada directamente a tu puerta. Los QR ya vienen impresos dentro del libro.</p>
+    </div>
+  </div>
+</section>
+
+<!-- EMOTIONAL MOMENTS -->
+<section class="emotional">
+  <div class="section-label">Momentos que merecen un libro</div>
+  <h2 class="section-title">¿Cuántos momentos tienes<br>perdidos en el móvil?</h2>
+  <p class="section-sub">Las fotos guardadas en el teléfono se olvidan. Un libro físico se queda para siempre.</p>
+
+  <div class="emotion-grid">
+    <div class="emotion-card reveal">
+      <img class="emotion-card-bg" src="https://images.unsplash.com/photo-1536640712-4d4c36ff0e4e?w=800&q=80&fit=crop" alt="Familia" style="object-fit:cover;width:100%;height:100%;">
+      <div class="emotion-card-content">
+        <div class="emotion-tag">👨‍👩‍👧 Familia</div>
+        <h3>El verano que siempre recordaréis</h3>
+        <p>Cada página, un momento. Cada QR, un vídeo que vuelve a sonar.</p>
+      </div>
+    </div>
+
+    <div class="emotion-card reveal" style="transition-delay:.1s">
+      <img class="emotion-card-bg" src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=80&fit=crop" alt="Viaje" style="object-fit:cover;width:100%;height:100%;">
+      <div class="emotion-card-content">
+        <div class="emotion-tag">✈️ Viajes</div>
+        <h3>Tu gran viaje, contado en páginas</h3>
+        <p>Ordenado por días, con el vídeo de cada lugar al escanear.</p>
+      </div>
+    </div>
+
+    <div class="emotion-card reveal" style="transition-delay:.2s">
+      <img class="emotion-card-bg" src="https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=600&q=80&fit=crop" alt="Bebé" style="object-fit:cover;width:100%;height:100%;">
+      <div class="emotion-card-content">
+        <div class="emotion-tag">👶 Bebés</div>
+        <h3>El primer año de tu hijo, página a página</h3>
+        <p>Cada hito, cada risa. Que lo vea cuando sea mayor.</p>
+      </div>
+    </div>
+
+    <div class="emotion-card reveal" style="transition-delay:.3s">
+      <img class="emotion-card-bg" src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=600&q=80&fit=crop" alt="Boda" style="object-fit:cover;width:100%;height:100%;">
+      <div class="emotion-card-content">
+        <div class="emotion-tag">💍 Bodas</div>
+        <h3>El regalo que ningún invitado olvidará</h3>
+        <p>Un libro con el vídeo de la ceremonia al escanearlo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MICROCLIPS -->
+<section class="microclips">
+  <div class="microclips-inner">
+    <div class="microclips-content">
+      <div class="section-label">Novedad · Micro-clips</div>
+      <h2 class="section-title">Todos tus vídeos cortos,<br><em>unidos en uno solo</em></h2>
+      <p>Tienes decenas de clips de pocos segundos dispersos en el móvil. La risa del bebé, el primer baile de la boda, el amanecer en la montaña. Cada uno en su carpeta, ninguno en su sitio.</p>
+      <p>Con Bookeo los seleccionas, los subes junto con las fotos y el sistema los une automáticamente en un único vídeo ordenado. Puedes añadir tu propia música o elegir entre los géneros de nuestra biblioteca sin ningún coste adicional.</p>
+      <p>El vídeo unido se descarga en tu dispositivo para que lo revises. Cuando estés conforme, lo subes tú junto con el resto de fotos y vídeos al crear el libro. Queda enlazado al QR de la página correcta del libro.</p>
+      <ul class="mc-checklist">
+        <li>Une hasta 5 clips en un único vídeo ordenado cronológicamente</li>
+        <li>Añade tu música favorita o elige un género de nuestra biblioteca</li>
+        <li>Descarga el vídeo unido y revísalo antes de subirlo</li>
+        <li>Tú decides cuándo y cómo lo incluyes en tu libro</li>
+      </ul>
+      <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Ver formatos y precios</a>
+    </div>
+    <div class="microclips-photo reveal">
+      <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=85&fit=crop" alt="Familia grabando momentos">
+      <div class="microclips-photo-overlay"></div>
+      <div class="microclips-photo-caption">
+        <div class="mc-badge">🎬 Micro-clips · Incluido gratis</div>
+        <h4>"Tenía 5 vídeos de 10 segundos. Ahora son un único vídeo en el libro con música de fondo."</h4>
+        <p>El vídeo unido se descarga en tu dispositivo para que lo compruebes. Luego tú lo subes cuando quieras.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QR FEATURE -->
+<section style="padding: 90px 5%;" id="qr-videos">
+  <div style="max-width:1100px; margin:0 auto;">
+    <div class="qr-feature">
+      <div class="qr-visual reveal">
+        <div class="feature-badge-wrap">
+          <div class="feature-badge">
+            INCLUIDO GRATIS
+            <span>sin coste adicional</span>
+          </div>
+        </div>
+
+        <div class="qr-phone">
+          <div class="qr-phone-screen">
+            <img src="https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=400&q=80&fit=crop" style="width:100%;height:100%;object-fit:cover;opacity:0.85;">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+              <div style="width:54px;height:54px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+                <div style="width:0;height:0;border-top:14px solid transparent;border-bottom:14px solid transparent;border-left:22px solid white;margin-left:4px;"></div>
+              </div>
+            </div>
+            <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:10px 14px;">
+              <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:4px;margin-bottom:6px;">
+                <div style="width:40%;height:100%;background:var(--green);border-radius:4px;"></div>
+              </div>
+              <div style="font-size:0.65rem;color:rgba(255,255,255,0.7);">Verano en familia · Día 2</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qr-book-corner">
+          <div class="mini-qr">📖</div>
+          <strong>Escanea el QR</strong>
+          <p>en cualquier página del libro y reproduce el vídeo de ese momento</p>
+        </div>
+      </div>
+
+      <div class="qr-content reveal" style="transition-delay:.15s">
+        <div class="section-label" style="text-align:left;">La gran diferencia</div>
+        <h2>El libro que cobra <em style="color:var(--green-dark);font-style:italic;">vida</em> al escanearlo</h2>
+        <p>La competencia te cobra 5€ por cada vídeo que quieres añadir. En Bookeo los vídeos QR están incluidos en todos los libros, sin límite y sin coste extra. Porque creemos que los recuerdos no deberían tener precio adicional.</p>
+
+        <ul class="feature-list">
+          <li>Sube los vídeos una vez · los guardamos en tu Google Drive</li>
+          <li>Los QR se generan solos y se insertan en el libro automáticamente</li>
+          <li>Funcionan para siempre · tus vídeos son tuyos en tu Drive</li>
+          <li>Sin límite de vídeos · añade uno por página si quieres</li>
+          <li>Se reproducen al instante con cualquier cámara de móvil</li>
+        </ul>
+
+        <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">Crear mi álbum con vídeos →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="precios">
+  <div class="section-label">Elige tu formato</div>
+  <h2 class="section-title">Precios claros,<br>sin sorpresas</h2>
+  <p class="section-sub">Vídeos QR incluidos en todos los formatos. Añade páginas extra cuando quieras.</p>
+
+  <div class="pricing-grid">
+
+    <!-- SMALL -->
+    <div class="pricing-card reveal">
+      <div class="pricing-size">Formato Pequeño</div>
+      <div class="pricing-name">Álbum 21x21</div>
+      <div class="pricing-desc">Perfecto para regalar · cabe en cualquier bolso · ideal para momentos concretos</div>
+      <div class="pricing-price">
+        <span class="pricing-currency">€</span><span class="pricing-amount" id="price-small">26</span><span style="font-size:1rem; color:var(--charcoal-light)">,90</span>
+      </div>
+      <div class="pricing-pages" id="pages-small">30 páginas · hasta 60 fotos · tapa dura</div>
+
+      <div class="page-adder">
+        <div class="page-adder-label">➕ Añadir páginas extra (de 2 en 2)</div>
+        <div class="page-adder-controls">
+          <button class="page-btn" onclick="changePacks('small',-1)">−</button>
+          <span class="page-count" id="packs-small">0 · +0,00€</span>
+          <button class="page-btn" onclick="changePacks('small',1)">+</button>
+          <span class="page-extra-price">0,50€ · 2 págs</span>
+        </div>
+      </div>
+      <div class="pricing-total">
+        <span>Total</span>
+        <span class="pricing-total-amount" id="total-small">26,90€</span>
+      </div>
+      <div style="font-size:0.72rem;color:var(--charcoal-light);margin-bottom:16px;">+ 2,90€ envío · Gratis con 2 libros</div>
+
+      <ul class="pricing-features">
+        <li>Vídeos QR incluidos gratis</li>
+        <li>Ordenación IA automática</li>
+        <li>Visualiza en el visor antes de confirmar</li>
+        <li>Envío a domicilio</li>
+      </ul>
+      <a href="photobookstudio.html" class="pricing-btn pricing-btn-outline">Empezar →</a>
+    </div>
+
+    <!-- MEDIUM featured -->
+    <div class="pricing-card featured reveal" style="transition-delay:.1s">
+      <div class="pricing-popular">⭐ Más popular</div>
+      <div class="pricing-size">Formato Mediano</div>
+      <div class="pricing-name">Álbum 21x28</div>
+      <div class="pricing-desc">El favorito de las familias · espacio para todas las fotos del viaje o el año</div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:8px;">ORIENTACIÓN</div>
+        <div style="display:flex;gap:8px;">
+          <button id="btn-vertical" onclick="setOrientation('vertical')"
+            style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--green);background:var(--green);color:var(--dark);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;font-family:'Plus Jakarta Sans',sans-serif;">
+            <span style="font-size:1rem;">📱</span> Vertical
+          </button>
+          <button id="btn-horizontal" onclick="setOrientation('horizontal')"
+            style="flex:1;padding:8px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.25);background:transparent;color:rgba(255,255,255,0.6);font-size:0.78rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;font-family:'Plus Jakarta Sans',sans-serif;">
+            <span style="font-size:1rem;">🖼</span> Horizontal
+          </button>
+        </div>
+        <div id="orientation-note" style="font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:6px;text-align:center;">
+          📱 Vertical · ideal para retratos y bebés
+        </div>
+      </div>
+      <div class="pricing-price">
+        <span class="pricing-currency">€</span><span class="pricing-amount" id="price-medium">32</span><span style="font-size:1rem; color:rgba(255,255,255,0.5)">,60</span>
+      </div>
+      <div class="pricing-pages" id="pages-medium">30 páginas · hasta 100 fotos · tapa dura</div>
+
+      <div class="page-adder">
+        <div class="page-adder-label">➕ Añadir páginas extra (de 2 en 2)</div>
+        <div class="page-adder-controls">
+          <button class="page-btn" onclick="changePacks('medium',-1)">−</button>
+          <span class="page-count" id="packs-medium">0 · +0,00€</span>
+          <button class="page-btn" onclick="changePacks('medium',1)">+</button>
+          <span class="page-extra-price">0,60€ · 2 págs</span>
+        </div>
+      </div>
+      <div class="pricing-total">
+        <span>Total</span>
+        <span class="pricing-total-amount" id="total-medium">32,60&euro;</span>
+      </div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:16px;">+ 2,90&euro; env&iacute;o &middot; Gratis con 2 libros</div>
+      <ul class="pricing-features">
+        <li>V&iacute;deos QR incluidos gratis</li>
+        <li>Ordenaci&oacute;n IA autom&aacute;tica</li>
+        <li>Visualiza en el visor antes de confirmar</li>
+        <li>Tapa dura</li>
+      </ul>
+      <a href="photobookstudio.html" class="pricing-btn pricing-btn-fill">Empezar →</a>
+    </div>
+
+    <!-- LARGE -->
+    <div class="pricing-card reveal" style="transition-delay:.2s">
+      <div class="pricing-size">Formato Grande</div>
+      <div class="pricing-name">Álbum 28x28</div>
+      <div class="pricing-desc">Para los momentos más especiales · el regalo definitivo · máxima calidad</div>
+      <div class="pricing-price">
+        <span class="pricing-currency">€</span><span class="pricing-amount" id="price-large">46</span><span style="font-size:1rem; color:var(--charcoal-light)">,50</span>
+      </div>
+      <div class="pricing-pages" id="pages-large">30 páginas · hasta 140 fotos · tapa dura</div>
+
+      <div class="page-adder">
+        <div class="page-adder-label">➕ Añadir páginas extra (de 2 en 2)</div>
+        <div class="page-adder-controls">
+          <button class="page-btn" onclick="changePacks('large',-1)">−</button>
+          <span class="page-count" id="packs-large">0 · +0,00€</span>
+          <button class="page-btn" onclick="changePacks('large',1)">+</button>
+          <span class="page-extra-price">0,80€ · 2 págs</span>
+        </div>
+      </div>
+      <div class="pricing-total">
+        <span>Total</span>
+        <span class="pricing-total-amount" id="total-large">46,50€</span>
+      </div>
+      <div style="font-size:0.72rem;color:var(--charcoal-light);margin-bottom:16px;">+ 2,90€ envío · Gratis con 2 libros</div>
+
+      <ul class="pricing-features">
+        <li>Vídeos QR incluidos gratis</li>
+        <li>Ordenación IA automática</li>
+        <li>Visualiza en el visor antes de confirmar</li>
+        <li>Tapa dura</li>
+        <li>Papel fotográfico de lujo</li>
+      </ul>
+      <a href="photobookstudio.html" class="pricing-btn pricing-btn-outline">Empezar →</a>
+    </div>
+  </div>
+
+  <p class="pricing-note">
+    <span>🚚</span> Envío 2,90€ · <strong style="color:var(--green-dark)">Gratis comprando 2 libros o más</strong> · Vídeos QR incluidos en todos los formatos
+  </p>
+  <p class="pricing-note" style="margin-top:8px; font-size:0.75rem;">
+    💰 Más baratos que la competencia · sin costes ocultos · sin cobrar por vídeos
+  </p>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials" id="opiniones">
+  <div class="section-label">Lo que dicen</div>
+  <h2 class="section-title">Familias que ya<br>tienen su Bookeo</h2>
+  <p class="section-sub" style="margin-bottom:50px;">Más de 500 libros enviados · valoración media 4.9/5</p>
+
+  <div class="testimonial-grid">
+    <div class="testimonial-card reveal">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-quote">"Lo regalé a mis padres por su aniversario con todas las fotos de la familia de los últimos 5 años. Cuando escanearon el QR y vieron el vídeo de la boda de mi hermana... mi madre lloró de emoción."</p>
+      <div class="t-author">
+        <div class="t-avatar">👩</div>
+        <div>
+          <div class="t-name">Laura M.</div>
+          <div class="t-meta">Madrid · Álbum A4 Familiar</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-card reveal" style="transition-delay:.1s">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-quote">"Hice uno con las fotos de nuestro viaje a Japón. La IA ordenó 340 fotos sola, yo solo elegí el título. El libro llegó en 4 días y es precioso. Los QR con los vídeos del viaje son una pasada."</p>
+      <div class="t-author">
+        <div class="t-avatar">👨</div>
+        <div>
+          <div class="t-name">Carlos R.</div>
+          <div class="t-meta">Barcelona · Álbum XL Viajes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial-card reveal" style="transition-delay:.2s">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-quote">"Hice el álbum del primer año de mi hija. Ver el QR con el vídeo de sus primeros pasos dentro del libro físico... eso no tiene precio. Y literalmente no tiene precio extra, ¡viene incluido!"</p>
+      <div class="t-author">
+        <div class="t-avatar">👩</div>
+        <div>
+          <div class="t-name">Ana T.</div>
+          <div class="t-meta">Valencia · Álbum A4 Bebé</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <h2>Tus fotos se merecen<br>algo <em>más que una pantalla</em></h2>
+  <p>Visualiza tu libro completo en el visor · edita lo que quieras · confirma cuando esté perfecto</p>
+  <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Crear mi álbum ahora</a>
+  <div class="color-strips">
+    <div class="strip strip-y"></div>
+    <div class="strip strip-r"></div>
+    <div class="strip strip-b"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <img src="data:image/png;base64,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" alt="Bookeo" class="footer-logo-img">
+  <p>© 2025 Bookeo · Libros de fotos con vídeos QR</p>
+  <ul class="footer-links">
+    <li><a href="#">Privacidad</a></li>
+    <li><a href="#">Términos</a></li>
+    <li><a href="#">Contacto</a></li>
+    <li class="footer-sep">|</li>
+    <!-- ⚠️ SUSTITUIR HREF POR LA URL REAL DE LA LANDING DE BEBÉS -->
+    <li><a href="bebes.html">Especial bebés</a></li>
+    <!-- ⚠️ SUSTITUIR HREF POR LA URL REAL DE LA LANDING DE VIAJES -->
+    <li><a href="viajes.html">Especial viajes</a></li>
+  </ul>
+</footer>
+
+<!-- MODAL — CÓMO FUNCIONA -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+
+    <div class="modal-header">
+      <h2>Así de fácil es crear tu libro</h2>
+      <p>3 pasos · ~4 minutos · sin descargar nada</p>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Pasos -->
+      <div class="modal-steps">
+        <div class="modal-step">
+          <div class="modal-step-icon">📷</div>
+          <div class="modal-step-content">
+            <h4>1 · Sube tus fotos y vídeos</h4>
+            <p>Todo en un paso desde tu galería. El sistema los ordena automáticamente por fecha y hora sin que hagas nada.</p>
+          </div>
+        </div>
+        <div class="modal-step">
+          <div class="modal-step-icon">✨</div>
+          <div class="modal-step-content">
+            <h4>2 · La IA diseña tu libro en ~4 minutos</h4>
+            <p>Analiza cada foto, elige los mejores layouts y coloca los vídeos QR en la página correcta. Listo para revisar.</p>
+          </div>
+        </div>
+        <div class="modal-step">
+          <div class="modal-step-icon">👁️</div>
+          <div class="modal-step-content">
+            <h4>3 · Visualiza y edita en el visor</h4>
+            <p>Revisa tu libro completo en el visor interactivo. Mueve fotos, cambia textos y ajusta layouts hasta que esté perfecto.</p>
+          </div>
+        </div>
+        <div class="modal-step">
+          <div class="modal-step-icon">📦</div>
+          <div class="modal-step-content">
+            <h4>4 · Confirma y recíbelo en casa</h4>
+            <p>Impresión en tapa dura de calidad profesional. Entrega en 5–7 días hábiles a cualquier punto de España.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Google Drive -->
+      <div class="modal-drive-box">
+        <div class="modal-drive-title">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path d="M4.433 22l-2.433-4.231 7.637-13.238 2.433 4.231L4.433 22z" fill="#0066DA"/>
+            <path d="M15.567 22H4.433l2.433-4H18l-2.433 4z" fill="#00AC47"/>
+            <path d="M18 18H6.866L14.363 4.769 21.567 18H18z" fill="#EA4335"/>
+          </svg>
+          Conecta tu Google Drive para los vídeos
+        </div>
+        <p class="modal-drive-desc">
+          Tus vídeos se guardarán automáticamente en tu Google Drive dentro de una carpeta llamada <strong>Mibookeo</strong> — accesible solo por ti, para siempre y sin coste extra.
+        </p>
+        <div class="modal-drive-note">
+          * Solo creamos una carpeta llamada <strong>Mibookeo</strong> en tu Drive para guardar tus vídeos. <strong>No tenemos acceso a ningún otro archivo ni carpeta de tu Google Drive.</strong> Tus vídeos son tuyos — si los borras, los QR de ese libro dejarán de funcionar.
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <button class="modal-cta" onclick="irAlCreador()">
+        Elegir mi formato y empezar →
+      </button>
+      <button class="modal-tutorial" onclick="verTutorial()">
+        <span class="tutorial-ico">▶</span> Ver vídeo tutorial
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CAROUSEL ──
+let currentSlide = 0;
+const totalSlides = 5;
+const INTERVAL = 4500;
+let carouselTimer;
+let progressTimer;
+
+function goSlide(n) {
+  const slides = document.querySelectorAll('.carousel-slide');
+  const dots = document.querySelectorAll('.cdot');
+  slides[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide = (n + totalSlides) % totalSlides;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+  resetProgress();
+}
+
+function moveSlide(dir) {
+  clearInterval(carouselTimer);
+  goSlide(currentSlide + dir);
+  startCarousel();
+}
+
+function resetProgress() {
+  const fill = document.getElementById('cpFill');
+  if (!fill) return;
+  fill.style.transition = 'none';
+  fill.style.width = '0%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      fill.style.transition = `width ${INTERVAL}ms linear`;
+      fill.style.width = '100%';
+    });
+  });
+}
+
+function startCarousel() {
+  resetProgress();
+  carouselTimer = setInterval(() => {
+    goSlide(currentSlide + 1);
+  }, INTERVAL);
+}
+
+// Start on load
+startCarousel();
+
+// ── NAV scroll effect ──
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// Reveal on scroll
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+reveals.forEach(r => observer.observe(r));
+
+// ── MODAL ──
+function scrollToPrecios(e) {
+  if (e) e.preventDefault();
+  document.getElementById('precios').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function abrirModal() {
+  document.getElementById('modalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function irAlCreador() {
+  cerrarModal();
+  window.location.href = 'photobookstudio.html';
+}
+
+function verTutorial() {
+  alert('Vídeo tutorial próximamente disponible.');
+}
+
+// Cerrar al hacer clic fuera del modal
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+
+// Cerrar con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') cerrarModal();
+});
+
+
+// ── ORIENTATION SELECTOR ──
+function setOrientation(type) {
+  const btnV = document.getElementById('btn-vertical');
+  const btnH = document.getElementById('btn-horizontal');
+  const note = document.getElementById('orientation-note');
+
+  if (type === 'vertical') {
+    btnV.style.background = 'var(--green)';
+    btnV.style.borderColor = 'var(--green)';
+    btnV.style.color = 'var(--dark)';
+    btnV.style.fontWeight = '700';
+    btnH.style.background = 'transparent';
+    btnH.style.borderColor = 'rgba(255,255,255,0.25)';
+    btnH.style.color = 'rgba(255,255,255,0.6)';
+    btnH.style.fontWeight = '600';
+    note.textContent = '📱 Vertical · ideal para retratos, bebés y comuniones';
+  } else {
+    btnH.style.background = 'var(--green)';
+    btnH.style.borderColor = 'var(--green)';
+    btnH.style.color = 'var(--dark)';
+    btnH.style.fontWeight = '700';
+    btnV.style.background = 'transparent';
+    btnV.style.borderColor = 'rgba(255,255,255,0.25)';
+    btnV.style.color = 'rgba(255,255,255,0.6)';
+    btnV.style.fontWeight = '600';
+    note.textContent = '🖼 Horizontal · ideal para viajes, paisajes y grupos';
+  }
+}
+
+// ── PRICING PACKS ──
+const BASE = { small: 26.90, medium: 32.60, large: 46.50 };
+const PACK_PRICE = { small: 0.50, medium: 0.60, large: 0.80 };
+const BASE_PAGES = { small: 30, medium: 30, large: 30 };
+const BASE_PHOTOS = { small: 60, medium: 100, large: 140 };
+const packs = { small: 0, medium: 0, large: 0 };
+
+function changePacks(size, delta) {
+  packs[size] = Math.max(0, Math.min(40, packs[size] + delta));
+  const p = packs[size];
+  const packCost = PACK_PRICE[size];
+  const total = (BASE[size] + p * packCost).toFixed(2);
+  const pages = BASE_PAGES[size] + p * 2;       // 2 páginas por unidad
+  const photos = BASE_PHOTOS[size] + p * 4;     // ~4 fotos por cada 2 páginas
+
+  const label = p === 0
+    ? '0 · +0,00€'
+    : `+${p*2} págs · +${(p * packCost).toFixed(2)}€`;
+
+  document.getElementById(`packs-${size}`).textContent = label;
+  document.getElementById(`total-${size}`).textContent = total + '€';
+  document.getElementById(`pages-${size}`).textContent =
+    `${pages} páginas · hasta ${photos} fotos · tapa dura`;
+
+  const priceEl = document.getElementById(`price-${size}`);
+  priceEl.style.transform = 'scale(1.15)';
+  priceEl.style.color = 'var(--green-dark)';
+  setTimeout(() => {
+    priceEl.style.transform = '';
+    priceEl.style.color = '';
+  }, 200);
+}
+</script>
+</body>
+</html>
