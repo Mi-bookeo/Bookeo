@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envíos y Devoluciones · Bookeo</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#faf8f3;color:#3a3a3a}
+nav{background:rgba(253,252,248,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(125,184,152,.2);height:68px;display:flex;align-items:center;padding:0 5%;position:sticky;top:0;z-index:100}
+nav img{height:48px;width:auto}
+nav a{margin-left:auto;color:#7db898;font-size:.84rem;font-weight:600;text-decoration:none}
+nav a:hover{color:#5a9a7a}
+.container{max-width:760px;margin:0 auto;padding:48px 24px 80px}
+h1{font-family:'Lora',serif;font-size:2rem;color:#1a1a2e;margin-bottom:8px}
+h2{font-family:'Lora',serif;font-size:1.3rem;color:#1a1a2e;margin:48px 0 16px;padding-bottom:8px;border-bottom:2px solid #7db898}
+h3{font-size:1rem;font-weight:700;color:#1a1a2e;margin:24px 0 10px}
+p{font-size:.92rem;line-height:1.85;color:#5a5a6a;margin-bottom:14px}
+ul{font-size:.92rem;line-height:1.85;color:#5a5a6a;margin:10px 0 14px;padding-left:20px}
+li{margin-bottom:8px}
+.highlight{background:#e8f3ee;border-left:3px solid #7db898;padding:14px 18px;border-radius:0 8px 8px 0;margin:20px 0;font-size:.88rem;color:#3a3a3a;line-height:1.7}
+.highlight strong{color:#1a1a2e}
+.alert{background:#fff8e8;border-left:3px solid #c9a84c;padding:14px 18px;border-radius:0 8px 8px 0;margin:20px 0;font-size:.88rem;color:#3a3a3a;line-height:1.7}
+.badge{display:inline-flex;align-items:center;gap:8px;background:#e8f3ee;border-radius:50px;padding:6px 16px;font-size:.82rem;font-weight:600;color:#5a9a7a;margin-bottom:24px}
+a{color:#7db898;text-decoration:none}
+a:hover{text-decoration:underline}
+.precio-tabla{background:white;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);margin:20px 0}
+.precio-fila{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0ece4;font-size:.9rem}
+.precio-fila:last-child{border-bottom:none}
+.precio-fila span:last-child{font-weight:700;color:#1a1a2e}
+.precio-fila .gratis{color:#7db898;font-weight:700}
+footer{background:#1a1a2e;padding:24px;text-align:center;margin-top:0}
+footer p{color:rgba(255,255,255,.45);font-size:.78rem}
+footer a{color:#7db898;font-size:.78rem}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html"><img src="data:image/png;base64,/9j/4QCARXhpZgAATU0AKgAAAAgABAEAAAQAAAABAAAB9AEBAAQAAAABAAAA6wEyAAIAAAAUAAAAPodpAAQAAAABAAAAUgAAAAAyMDI2OjA2OjA0IDAyOjU3OjUyAAABkAMAAgAAABQAAABkAAAAADIwMjU6MDQ6MTkgMTg6MjI6MzYA/+AAEEpGSUYAAQEAAAEAAQAA/+IB2ElDQ19QUk9GSUxFAAEBAAAByAAAAAAEMAAAbW50clJHQiBYWVogB+AAAQABAAAAAAAAYWNzcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAPbWAAEAAAAA0y0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJZGVzYwAAAPAAAAAkclhZWgAAARQAAAAUZ1hZWgAAASgAAAAUYlhZWgAAATwAAAAUd3RwdAAAAVAAAAAUclRSQwAAAWQAAAAoZ1RSQwAAAWQAAAAoYlRSQwAAAWQAAAAoY3BydAAAAYwAAAA8bWx1YwAAAAAAAAABAAAADGVuVVMAAAAIAAAAHABzAFIARwBCWFlaIAAAAAAAAG+iAAA49QAAA5BYWVogAAAAAAAAYpkAALeFAAAY2lhZWiAAAAAAAAAkoAAAD4QAALbPWFlaIAAAAAAAAPbWAAEAAAAA0y1wYXJhAAAAAAAEAAAAAmZmAADypwAADVkAABPQAAAKWwAAAAAAAAAAbWx1YwAAAAAAAAABAAAADGVuVVMAAAAgAAAAHABHAG8AbwBnAGwAZQAgAEkAbgBjAC4AIAAyADAAMQA2/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgA6wH0AwEiAAIRAQMRAf/EAB0AAQACAgMBAQAAAAAAAAAAAAAGCAUHAQQJAwL/xABWEAABAwICBAcICg4JBAMAAAAAAQIDBAUGEQchMUEIEhMYUWGTFFVWcYGRstMiMjU3QlJ1kqHSFRYXI1NUcnOClLGzwdEkNkZiZnSipeEzNGPjQ8Lw/8QAHAEBAAIDAQEBAAAAAAAAAAAAAAQFAgMGAQcI/8QAOBEAAgIBAgQDBQUGBwAAAAAAAAECAxEEIQUSMVETQaEiMnGRsRQVM4HRBgc0UmGSQkNTgpPh8f/aAAwDAQACEQMRAD8A36ACsOCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABre9cIXA+H7vWWyuucsVZSSuhmYlJK5GuauSpmjclPUm+hnCudjxBZNkA1VzndHvfeb9Tm+qOc7o977zfqc31TLkl2Nv2a/wDkfyNqg1VzndHvfeb9Tm+qfeDhKaO53tb9nljVy5ffKOdE8q8TJByS7D7Nd/I/kzZwMJYMb4fxSuVovVDcX5ZrHTztc9E6255p5UM2Y9DQ04vDQAB4eAAAAAAAAAAAAAAAAAAAAAAAw+Mqua34QvlVTyLFUQUE8scjdrXJG5UVPEqHp6llpGYBQn7u2PvCet/0/wAh93bH3hPW/wCn+Rv8F9y4+67f5l6l9gV74LeP8Q40uWII73dZ7iynhhdEk2XsFVzs8sk6kLCGmUeV4ZWXVOibrl1QABiaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAefel/30sV/KU/pqegh596X/AH0sV/KU/pqSKerLvhX4kvgREA/Ucb5pGxxtV73KjWtamaqq7ERCWdKfkGfqNHuKaRM58NXiFP8AyUErf2tMDJG6J7mParHtVUc1yZKi9CnmcmKkpdGcxSvgkbJG90cjVza5q5Ki9KKbi0YcJbEGD6iCkvU0l8s3GRHcs7jVETelj125dDs+hFQ02DxxUtma7KoXR5ZrJ6SWK+0OJbRS3O2VLKuhqWceKVmxU/gqLmioutFRUO8Vj4H+NJVqLtheomV0PE7tpWO+CuaNkRPHmxcupV6SzhBlHleDjtRT4FrgAAYEYAAAAAAAAAAAAAAAAAAGBx9/UTEfybU/unGeMDj7+omI/k2p/dOPV1M4e+viedYALI70sdwM/dbFH5iD0nlpCrfAz91sUfmIPSeWkINvvs5DiH8TL8voAAaiuAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB596X/fSxX8pT+mp6CHn3pf99LFfylP6akinqy74V+JL4ERO/h73ftv+Zi9NDoHfw97v23/ADMXpoSzo5dGekZAtKWiCyaSbPUtmpIobykarTXBjUbI16J7FHKntm57UXyZLrJ6dO8XamsNqrLjWyJDSUsTppXrua1M1K1Np7HCVylCScHuebc0T4JXxSNVkjHK1zV2oqbUPyfauqlrq2oqXJk6aR0ip0Kq5/xPiWR3htPgy1q0mmOzs3VEc8S9k537WoXfKV8FezuuWlqlqkaqst9NNUOXcmbeTTPtPoLqEO73jluJ48dY7fqAAaCpAAAAAAAAAAAAAAAAAABgcff1ExH8m1P7pxnjA4+/qJiP5Nqf3Tj1dTOHvr4nnWACyO9LHcDP3WxR+Yg9J5aQq3wM/dbFH5iD0nlpCDb77OQ4h/Ey/L6AAGorgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAefel/30sV/KU/pqegh596X/AH0sV/KU/pqSKerLvhX4kvgRE+9vq+4K+mqeJx+RlbJxc8s8lRcs/IfAEs6TqWWm4Z8jo1SLCLWP3OfcVcieTkk/aas0k6c8S6TIe5K2SKhtaO43cVGitY9U2K9VVVdl5s9eRrwGChFbpESvSUVPmhHcHLGOke1jGq5zlyRqJmqr0HBtXQpj/BWAq5lZfLDV1l0a/wC917HtlZCnS2JeLxVTpzcvRlsMm8LY32ScIuUVllguDnorl0e4VkrbjEsd6unFkmjcmuGNM+JGvXrVV61y3G2yP4Qx9YMeUjqix3OGua1EV8bc2yR/lMXJU8x+MfY8tejrDk93ukmUbfYRQt9vPIqLkxvWuS+JEVdxAeZPfqcZY7LrXzL2n5GSxBiK24WtU1yu1ZFQ0USZullXJPEibVVdyJrUr1jjhfpHI6nwpa2yoi5d2XJFyX8mNqovlVfIaN0h6Sr1pKvD6261DuRa5e56Ni/eoGruanT0uXWpFSTGpL3i+0/DYQXNbu/Q2Ld+EJj67zOe7EE1K1dkdIxkTW+ZM/OqmG+63jVJuU+2u8cbo7tk4vmzyImDbyrsWipqWyivkbHs/CHx9Zpke2/SVjN8VZGyVrvKqZp5FQ23gXhe09TIynxZbUpFXV3bb0VzE/KjVVcnjRV8RV0GLhF+Ros0dFi3jj4bHpNZ7zQ4gt0NfbauKto5k40c0LuM1f8Anq3HcKAaM9Kl60Y3dlTQTOloXvRamge773Mm/wATstjk1+NNRd3DeP7JifCLcSUtYxlsSN0k0ky8VYOKmb2v6Fbv86alQizrcTnNVo56d7bpkgllZBG+SR7Y42IrnPcuSIibVVTRuP8AhW2HD75qTD8C32sYqt5fPiUzV6nbX+TUu5TTmmzTvX6RK+a3WyaWjw1GvFbEnsXVWXw5N+XQ3dqz1mpDbCrzkWOm4asc13y/U2nfuExj2+OyjucVrj/B0EDW/wCp3Gd9JGp9LuNql6Ofiu7oqLn97rHsTzIqERBvUUvIuI0VR2UV8id0GnTHtuka+LE9a9W7p1bKi+NHouZsnCHC+u9JOyLEdsguFLsdPRJyUydfFVVa7xex8ZXsHjhF+RhPS02LEoo9D8EaQ7DpDty1lkrm1KMySWFycWWJehzV1p49i7lU+uPv6iYj+Tan9048/cPYkueE7rDcrTWS0NbF7WWJdqb0VNiou9F1KW7wrpho9KeinEiSIymvlLa6juulTYv3pycoz+6v0LqXcqxpV8ryuhQ6jQuiSnDeOfkUyABMOoLHcDP3WxR+Yg9J5aQq3wM/dbFH5iD0nlicZYyteA7DUXe71CQ00SZNamt8r9zGJvcv/K5IikKzeZyOuTlqpJddvocYzxna8BWCou92nSGniTJrE1vlfuYxN6r/AMrkiKVbr+F1i6WtnfSUVrp6VXqsUUkL3ua3ciu46Zr15Ia/0oaULppQv7q6tcsNHEqtpKJrs2QM/i5dWbt/UiIiQ03QrSW5b6bQQhHNqy36G6udvjf8BaP1Z/1xzt8b/gLR+rP+uaVLNcHzg+cXubFGKKbXqkobdK3ZvSSRPpRvlXceyUIrLRnfXpdPDmnBG2dEN1xpiKy/ZXFsVHRNqGotLRwQOZIjfjvzcuWe5vn6DEaReEdhfAj5qOnkW93aNVatLSOTiMcm58mxNepUTNU6DXvCJ0+ywVFRhXDNXyaszjr6+F2tF2LEx27L4Sp4tylZTCNfN7TIWn0Kufi2rCfRI3BibhTY2vkipQz09jgz1MpIkc9U63Pz+hEIu/Tfjx8iPXFFejk3I9ETzImRBzN0+BsSVdN3RBh+6zU+WfKx0UjmZdOaNyN3LFeRbqiitY5UiZWnhI6QLVMj1vSVzN8VXBG9q+VER3mU23gPhd0ddIymxXb0t73Ll3bQo58X6TFVXN8iu8SFW6inlpJnwzxPhlYuTo5Gq1yeNFPmeOEX5GFmjotW8cfDY9K7fcKa60UNZRVEdVSzNR8c0Lkcx7V3oqbT7lGdCumeu0Y3lkNRJLU4eqHZVNJnnyef/wAjE3OTem9PIqWi0q6ZbXo6wtBXwvjr66vj49vgaubZUVEVJFX4iZovXnknVFlW08HOX6KyqxQjvnoSXGePLHgC2d3XuuZSRKuUbPbSSr0Namtf2JvyK7Yw4YFxqJ3RYZtUNJTpqSouCcpK7rRrVRrfKrjReKMV3XGd3lud4rZK2rk1cZ66mJua1NjUToQxJvjUl1Lmjh1dazZu/Qntw084+uUrnyYlq4uN8Gn4sSJ4kaiGPi0uY2hkV7cV3hVXc+skcnmVciJA28q7Fiqa1sor5G0LDwk8e2OTN12Zc4vwVfC16fOTJ30m58AcLKzXt8VJiWlWyVTlRqVUSq+mcvX8JnlzTpVCpAMXXF+RHt0VFq3jj4bHpfT1EVXBHNBIyaGRqOZJG5HNci7FRU2ofso/oZ043LRrcYaSrllrcOSOylpFXjLDn8OPPYqbVbsXXv1l1rXdKS926mr6GdlTR1MaSRSsXU5q7FIk4ODOZ1OlnppYe6fmdoAGshgAAAAAAAAAAAAAAAAAA8+9L/vpYr+Up/TU9BDz70v++liv5Sn9NSRT1Zd8K/El8CInLGOke1jGq57lyRrUzVV6Dg7+Hvd+2/5mL00JZ0jeFk732g4nT+zl2/UZfqmOr7LcbVl3bQVVHns7ohcz9qHpMfmWJk8bo5GNkY5Mla5M0VOtCL439DnlxWXnD1PM8FpOEdoMtkViqsVWClZQ1NL7OtpYW8WOVirkr0bsa5M81y1Kma7dtWzfGSksouaL46iHPE71jvtww3dILjbKuWirYHcZk0TslTqXpRd6LqXeSvSjpcuulWpt0lwjZTRUcCRtghVeI6RfbyZLsV2SateSIhBV2HJlhZybXXFyU2t0ACbaGMIQY40k2a11TePRrI6advxmMar1avUqojfKG8LJ7OShFyfREt0WcGu84+oYbrcahLJaJUR0Tnx8eadvxmtzTJq7lVetEVDazuB5hbkMkvF4SbL26viVvm4n8TfDGNjY1rWo1rUyRqJkiIckJ2SbOTs1985ZTwikulbg73rRvTPuVPMl5srV9nURsVkkPRx2Zrq3cZFVOnLUanPS6ppoqynlp542zQStVkkb0za5qpkqKm9FQ899JuFo8FY9vdlhVVgpahUi42tUjciOYi9K8VyG+ublsy40GrlfmE+qIyZigxfdrZhu5WGmq3R2y4SRyVEKfCVmzxZ6s+nip0GHOEN5atKXU5AP3BA+pnjhjTjSSORjU6VVckBkTfRfoevmlOskSgaylt0LuLPXzovJsXbxURNbnZa8k6s1TNDfVDwOsNx0yNrL3dZ58tb4OTibn+SrXL9JuPBWFKTBGF7dZaJqJDSxI1XZZLI/a569armvlM2QpWyb2OUv4hbOT8N4RVDH/BJr7PRS1uGa913bGnGdQ1DEbOqf3HJqcvVknVnsK+yRuikcx7VY9qq1zXJkqKm1FQ9MSnnCvwbTYexxSXWkYkTLxE6SVjUyTlmKiOcnjRzVXrzXeba7G3hk7Q62dsvCs37M0gZTDuI6zDFdJVUcisWWCWmlbufFI1WuavkXNOtEXcYs4XYSC8aTWGcgAHpvPgyYxteBKfGF3u9QkFNFBAiNTW+R3Gfkxib3L/yupFNf6UdKN00o391bWqsFHEqtpKJrs2Qs/i5d67/EiIQwGPKs8xGjRBWu7zfoACzPB84Pn/bYoxRTdElDbpW+VJJE+lG+VdwlJRWWe33w08OeZzwe+D7l3NijFFNr1SUNulb5UlkRfOjV8a7jbGnTHz9Hmj2trqZ3FuNS5KSkXPW2RyL7L9FqOXxohsAq5wyrtI654btiPVImQy1LmJvcrkair4uKvnUiJuye5zdUpa3Ux8ToVwc5XKqqqqq61Vd4AJp1hangt6J7fHYYsYXGBlXW1TnNomytzSBjXK1Xoi/CVUXXuRNW1SxJ5y0eMr/b6aOmpb5cqanjTJkUNXIxjU6ERFyQ+32/Yn8I7v8Ar0v1iPKpyeclHfoLL7HNzLvaUdFVp0m2KemqYYobmjP6LcEYnKRO3Iq7Vau9v8clKEVlJLQVc9NO3iTQvdG9vQ5FyVPOhmft+xP4R3f9el+sYSeeSpmkmmkdLLI5Xvkeqq5zlXNVVV2qpshFx2bJuk089OnGUso/B2q66VlzZStq6iSobSwpTwpI7Pk40VVRqdSKq+c6inJsJ2AGtVzkREVVXUiJvBuTgs4Mp8T6Qn11YxJYLRD3SxjkzRZlciMz8XsneNqGMnyrJqtsVUHN+RmtHnBOuV+ooq/Ela6zRSIjm0UTEdUZf3lXUxerWvTkTir4HWGX06pS3q7Qz5anzLFI3P8AJRjV+k34CG7JPzOVnr9RKWVLBQzSloXvmiyoY+s4tba5XcWG4QIqMVfiuRfauyTPLWi7lXJSAHo7irDVFjDD1fZ69iPpauJY3as1au5ydaLkqdaHnVcaGS2XCqo5cuVp5XRPy2ZtVUX9hJrnzLcvdDqnqItS6o65Zngj6Q5ZH1mD6t6ujYx1XROVfa605SPy58ZP0ukrMTXQrdn2bSthedj1Zx61lO5U3tkXk1TzOMprmi0SNVUraZRZf0AFecUAAAAAAAAAAAAAAAAAADz70v8AvpYr+Up/TU9BDz70v++liv5Sn9NSRT1Zd8K/El8CInfw97v23/Mxemh0Du2OVkF6t8kjkZGyojc5zlyRERyZqSzo5dGekoIh91/BCf2rtP62z+ZjLpwgMAWmNXSYjp513MpWPmVfmoqecruV9jh1Ta9lF/Izmk+eGn0b4ofUZcj9jKlFRd+cbkRPKqoh55m7tNvCLfpAoJLFZKeWisr3Is80+SS1GS5omSZo1uaIu1VXJNmtF0iS6ouK3Om4fROit8/VnC7DkHCG4tDk2pwZLnDbdL1sbM5GJUxTU7XL8ZWKqJ5Vbl5TVZ9qGtntlbT1lLK6Gpp5GyxSN2se1c0VPEqIeNZWDVbDxISh3R6WA1Nos4Q1gxxboILnVwWe+tajZYKh6Mjld8aNy6sl+Kq5p17Tabq2nZDyzp4ki28or04vnK9prZnE2VTqlyzWGfYoZp8ukN30v4lqIHI6Ns7YM02caONsbvpYpYvS9wjbLhO2VNDh+shut9karGPp3I+GmXZxnOTUqpuametNeRTeSR80jpJHK971VznOXNVVdqqpIqi1uy94bp5wbtksZ2R+ThDk4JJfHJ27PWNt13oap6ZsgnZKqZZ5o1yL/A6gB41nY9L4J46qCOaJ6SRSNR7Ht2ORUzRUP2Vn0A8Ia32+z0uGcUVCUfcyJHR3CT/prH8GN6/By2I7ZkmvLLXY+julFcYEnpKyCqgVM0khla9qp05ouRXyi4vDOIvonRJxkjslWeGXdIZrzhm3tciz08E870TajZHMRv7txu3HumbC+j+ilfWXGGqrmp97t9K9HzPXciontU63ZeXYUjxvjCux5ieuvdwVEnqX5pG1fYxsRMmsTqRETx7d5tqi85LLh2nm7PFawkYI4XYcnLWq9yNamblXJETepLOmOAAAOKvFVclyTUqg3vwXsKWzGkOMLTdqdtTRz08GaLqcx3Gfk5q7nJuUgOljRPc9Fl8WnqEdU2ydVWkrkbk2RPir0OTenlTUYcy5uUix1EHa6X1XqQYsxwfOEHl3NhfFFTq1R0Nxld5EjkVfMjvIpWcHsoqSwzK+iGohyTPTIqXwxaRWY1sdVmvFkt/Jom7Nsjl/+6Ga4PnCD4vc2F8UVOrVHQ3GV2zckcir5kd5FJJwt8IvvGCqG9QRLJNap1SVWprSGTJFXyORnnUixThPDOe09ctJqoxn5lQwATDqSweEuCc3FWF7TeW4r7nSvpY6jkfsdx+TVzUVW8blUzyVcs8k2GW5l/8AjH/a/wD3H24Nem62UdjhwnfquOhlp3KlFVTu4scjHLnybnLqRyKq5Z6lTJN2uybXI5EVFRUXWipvIkpzi8HMajU6qixxctvLZfoVm5l/+Mf9r/8AcOZf/jH/AGv/ANxZSrrILfSy1NVNHTU8TVdJLK5GtYib1VdSIVv0jcLF9uxFDS4Tgp6630zv6RU1LXcWpX4rMlRUanxt67stvkZWS6HlOo1t7xCXov0IxpD4LbsC4NuV+ZiT7ILRNa/ubuDk+Oiva1fZco7LJFVdm40SXHs2nLCOl/DVfh+4TJYbhcKZ9MsFa5OTVzm5IrJNi5KqZIuS5psKf19DPbK6oo6qNYamnkdFLG7a1zVyVPOhvg5PKkW+jstkpRv95fQ+BYTgc3OGDE9/oHuRs9RSRyxou9GPVHZfPT/8hXszODsV1uCMS0F7t7kSppH8ZGu9q9qpk5q9Soqp5TOS5k0SNRU7qpQXmejIIFo/014X0gUUTqe4Q0NwVE5S31ciMla7ejc8uOnW3y5bCaVVzo6GBZ6mrgp4ETNZJZEa1E6c1XIr2mtmcXKucJcslhn3kkbFG573IxjUVznKuSIibVPOHE1xjvGJLrXxJlFVVcs7Eyy1Oerk/aWP098Ie3VFmq8N4XqUrZapqxVVwi/6bI11OYxfhKqalVNSIupVXZV4l1RaWWdHw2iVcXOaxkEn0X0jq7SRhaFu11zp1XLciSNVfoRSMG5+CrhJ990jpdHxK6ktELpleqex5VyKxjfHkrnfom2Twmyyvmq6pSfYuWACuOHAAAAAAAAAAAAAAAAAAB596X/fSxX8pT+mp6CHn3pf99LFfylP6akinqy74V+JL4ERABLOlAARFVck1qAAZKiwxeLk5raS011U52xIaZ71XzIT/C/BtxziSZnK2xLPTO1rPcHozJPyEzfn5PKYuSXU0ztrrWZSSNZ0tLNXVMVPTxPnqJXpHHFG3jOe5VyRERNqqpvq/cFy423RfTV9Oi1GJ4FdU1dJGvG40aon3tnS5mWerarnImfsTcuinQJYtGjWVjsrrfMtddMzJI+qNuvi+PWu3XlqNnEeVu/slFqOJNzXg9F6nmaqKi5LqUFw9L3Bpt+M5J7th5YrVenqr5YnaoKhy7VXL2jl6U1LvTXmVdxdo/xDgSq5C92ueizXJkqpxon/AJL0zavizzN0ZqRb0aqvUL2Xv2I8ADYTAAS3BOinFGkCRv2HtcslMq5OrJvvcDen2a6l8SZr1HjaXUwlKMFmTwiKwQSVU8cMMb5ppHIxkbGq5znKuSIiJtVVLT4R4MTF0VXChuyRQ4muPFqI5V19yOai8SPPyuRyp8bfxUUmGiLg+2jRw2K4VqsuuIMs+6XN+9wLvSJF83GXX4s8jbBFnbnaJzur4g5NRpey8+//AEebl+sVdhm71VruVO6lraZ6skifuXpTpRdqLvRToF89Kehix6UqTj1Te4rtGziwXGFvs2pua9PhtzXYuzXkqZlSceaEMWaP1klrbe6rt7M/6fRZyRZdLstbP0kQ3QsUi002trvSTeJdv0IEADaWIAMthzCd4xfXJSWa21Fxn3tgZmjetztjU61VAeNqKyzEm8tD2hyofhK+4zvEHJU0drqlt0MieykcsTk5bL4qJnxelVz3IqzXRPwV4rZNHc8ZclWTtVHR2uJ3GiavTI74X5KaulV2G7MdsbFgHELGNRjG2yoRrWpkiJyTtSEednlEo9Tr4yaqq/NnnYACQXpY7gZ+62KPzEHpPLG4rwpbMaWOptN2pm1NHOmtF1OYu5zV3OTcpXLgZ+62KPzEHpPLSEKz3zkde3HUya/p9Cg2ljRPc9Fl8WnqEdU2ydVWkrkbk2RPir0OTenlTUQY9G8V4UtmNLHU2m7UzamjnTWi6nMXc5q7nJuUo7pY0T3PRZfFp6hHVNsnVVpK5G5NkT4q9Dk3p5U1G+uzm2fUudHrFeuSfvfUgxY/Qdpzprpb/tKxpI2ejqI1paesqFzRzHJxeSlXoyXJHeRdylcAbJRUlhk26mN8eWX/AITbSxouuGi7Ej6KdHTW+ZVfRVeWqVmexehyZoip5dioQk37op0p2nGlmjwHpBayron5MobjO7J0TtjWuftaqbGv8i6jAaSuDZiPBk89VaoZL7ZkVXNlgbnPG3oexNa5dLc01Z6thipY2kaK7+SXhX7S7+TNQmbs+OMRYej5O2X240EeWXJ09U9jcvEi5GEVFaqoqZKm1FBs6k1pSWGjJXfEt3v/ABfspda25cVc07rqHy5L+kqmNBmsMYKvuM6rueyWupuMiLk5YmewZ+U9fYt8qoebI89mC7Iwpsq/aCsTWfR7S4sqYnvR/sqijci8tTw5IjHuTo25p8FOLnvy3foe4MtNhOphvGJnQ3G6Rqj4aRnsoYHfGVV9u5PMnXqVN7yRsmjdHI1r2ORWua5M0VF2oqEeVuH7JSajiSjNKrdLqeZ4LRaV+CqyumkueDOTp5HKrpLXK7ixqv8A4nL7X8ldXQqbCuGIcL3bCdctHeLdUW6pTYydit4ydLV2OTrTNDdGal0LSnU13rMHv28zGAAzJQANg4D0FYtx86KWlt7qG3PyXu6tzjjy6Wptf5EVOtDxtLdmuc41rmm8IhlisVdiW70tsttM+rral6MjiYmtV6epE2qq6kRC+OiTRzBoywdTWprmS1r1WarnYmqSVduXUiZInUme9TraL9Dlj0XUX9Dj7rukjOLPcZmpyj+lGp8Fue5OhM1XInhEss5tl0OY1us+0exD3fqAAaCqAAAAAAAAAAAAAAAAAABoW8cLez2e711A+w10j6Wd8DntlZk5WuVuaeY30VQxFwT8XXfEFzrobjZWw1VVLOxr55kcjXPVUzyiXXkptgov3ifpI0Sb8d/AlXPIsvg9X9qwc8iy+D1f2rCC8z7GXfOxdvN6ocz7GXfOxdvN6o24qLLwuH9/Vk655Fl8Hq/tWDnkWXwer+1YQXmfYy752Lt5vVDmfYy752Lt5vVDFQ8Lh/f1ZOueRZfB6v7Vg55Fl8Hq/tWEF5n2Mu+di7eb1Q5n2Mu+di7eb1QxUPC4f39WTrnkWXwer+1YOeRZfB6v7VhBeZ9jLvnYu3m9UOZ9jLvnYu3m9UMVDwuH9/Vk655Fl8Hq/tWH4m4YVhqInRy4arZY3alY+SNUXyKQjmfYy752Lt5vVDmfYy752Lt5vVDFR74XD+/qzs3PTNovu8rpanRu1ZHbXRJHEq9a8XIxbNIWiKOflU0c1Ku6HVr1b81X5fQdvmfYy752Lt5vVDmfYy752Lt5vVGWYdzcpaRbKx/NmTtWnnRvZJEkotHUcEqbJOThc9PE5UVSTN4Y1jY1Gtw7XNampESViIhBuZ9jLvnYu3m9UOZ9jLvnYu3m9UeYrfVmuUNDLeUs/mydc8iy+D1f2rBzyLL4PV/asILzPsZd87F283qhzPsZd87F283qjzFRh4XD+/qydc8iy+D1f2rBzyLKv9nq/tWEF5n2Mu+di7eb1Q5n2Mu+di7eb1QxUPC4f39WZa9af9HeInq+46PW1Uq7ZXMiR6/pIiL9JHptIWiKd6Pdo5qUVFz9hWvanmR6IdvmfYy752Lt5vVDmfYy752Lt5vVGXsLozcnpI7Rsa/NnYoNMei22ua6HRsxXN1osyRy5fOzJZS8LzDtDCkVNherp4k2MifG1qeRCF8z7GXfOxdvN6ocz7GXfOxdvN6o8arfVmEo6KfvTz+bJ1zyLL4PV/asHPIsvg9X9qwgvM+xl3zsXbzeqHM+xl3zsXbzeqPMVGHhcP7+rJ1zyLL4PV/asHPIsvg9X9qwgvM+xl3zsXbzeqHM+xl3zsXbzeqGKh4XD+/qydc8iy+D1f2rBzyLL4PV/asILzPsZd87F283qhzPsZd87F283qhioeFw/v6snXPIsvg9X9qwc8iy+D1f2rCC8z7GXfOxdvN6ocz7GXfOxdvN6oYqHhcP7+rJ1zyLL4PV/asHPIsvg9X9qwgvM+xl3zsXbzeqHM+xl3zsXbzeqGKh4XD+/qzZOH+FjaMQX622uOxVsUldUxUzZHSsVGq9yNRV6kzLLtwdO5qL3RHrTPYpTXCPBVxZYMV2W51Fxsz6eirYKmRsU8yuVrJGuVERYkTPJN6oXZZi6iaxqLHPmiZe1T+ZzXGbNZV4f2BZ652z2x1/M3U08Ncnzy2+LIhf9BdgxS/j3a1W2ul/CyU6cp85Nf0kZl4ImA5pUkdY6ZHJubPO1PMj8ja324UX4Of5qfzH24UX4Of5qfzObWr4+ukX8kWEY8MisRsx/uZru28GPBtqcjoMP2pzkXNFnhWbL5+ZlMWW+PAGGpK/k43U0CtYkFO1GZZrlq3ITD7cKL8HP81P5kW0mTtxlhKotdFnFUSPY5HT6mZI7NdaZr9Bvo1PG5WJWxfL8Eb9NVwa3U1LU2ew5R5syfu8y5vTJrT7stF3uqPntH3ZaLvdUfPaYL7j15/GaDtH/UH3Hrz+M0HaP+oWvi8Q7eiPsH3T+7X/AFl/fMzv3ZaLvdUfPafCs0rWm4wLDV2Z1VCu2OZGPavkUxP3Hrz+M0HaP+oPuPXn8ZoO0f8AUHi8Q7eiH3T+7Zf5y/5JmBxEzRtHRU9dUYFp1Sqlli4tOiQ5KxGKq5NVE18omzoI9TTaK6WRXswG9zlXPKSqe9PM56oTm+6GL3c7RQUsVVQNkgnnlcr5Hoio9sSJl7Db97X6DBc3vEX47a+1k9WfU+EV8Ls0NctdPFrzndrzeNl/TB+df2itVHFdRVwmbenT9h5b2wvN7vc7Fm0lYHw87jW3BMFHJ+EihiR/zss/pJBzibb3oqu0aRfm94i/HbX2snqxze8Rfjtr7WT1ZbfZv2ff+Nf3M5d26uTy9yUc4q296KrtGm0LPcW3i00NexixsqoGTtY7a1HNR2S+c0Pze8Rfjtr7WT1ZvPDtuktGH7ZQzOa6alpYoHuYqq1XNYiLlnlqzQoOL1cNrhB6GWXnfdv6kiiVzb8QyAAOYJgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/9k=" alt="Bookeo"></a>
+  <a href="index.html">X</a>
+</nav>
+
+<div class="container">
+
+  <div class="badge">📦 Información de envíos y devoluciones</div>
+  <h1>Envíos y Devoluciones</h1>
+
+  <!-- ══ ENVÍOS ══ -->
+  <h2>Política de Envíos</h2>
+
+  <h3>1. Zona de envío disponible</h3>
+  <p>Actualmente en mibookeo.es operamos y realizamos envíos exclusivamente a <strong>España Peninsular</strong>.</p>
+  <div class="alert">Lamentablemente, por motivos de logística y gestión aduanera, no realizamos envíos a las Islas Canarias, Islas Baleares, Ceuta ni Melilla, ni tampoco envíos internacionales.</div>
+
+  <h3>2. Plazos de entrega</h3>
+  <p>Como nuestros productos se fabrican de forma exclusiva para ti bajo demanda, el tiempo total de entrega se divide en dos fases:</p>
+  <ul>
+    <li><strong>Tiempo de producción:</strong> entre 1 y 4 días laborables para imprimir, revisar la calidad y empaquetar tu producto.</li>
+    <li><strong>Tiempo de envío:</strong> una vez que el paquete sale del centro de producción, la empresa de mensajería tarda entre 2 y 5 días laborables en entregarlo en la Península.</li>
+  </ul>
+  <div class="highlight">
+    <strong>📦 Tiempo total estimado: 5 a 7 días laborables</strong> desde que confirmas tu compra.<br>
+    <small>En periodos de alta demanda como Navidad, Black Friday o verano, estos plazos podrían sufrir leves retrasos ajenos a nuestro control.</small>
+  </div>
+
+  <h3>3. Gastos de envío</h3>
+  <p>Los costes de envío se calculan automáticamente y se desglosan antes de realizar el pago:</p>
+  <div class="precio-tabla">
+    <div class="precio-fila">
+      <span>Envío estándar · España Peninsular</span>
+      <span>2,90 €</span>
+    </div>
+    <div class="precio-fila">
+      <span>Envío con 2 fotolibros o más</span>
+      <span class="gratis">Gratis</span>
+    </div>
+  </div>
+
+  <h3>4. Seguimiento del pedido</h3>
+  <p>Una vez enviado tu paquete, recibirás un email automático con un enlace de seguimiento para comprobar el estado de tu entrega en tiempo real.</p>
+
+  <!-- ══ DEVOLUCIONES ══ -->
+  <h2>Política de Devoluciones y Cambios</h2>
+
+  <p>En mibookeo.es cada producto se fabrica de forma exclusiva y bajo demanda en el momento de tu compra. Debido a este proceso de producción personalizado, <strong>no aceptamos devoluciones ni cambios por desistimiento</strong> (cambios de opinión, error en la elección de formato, etc.).</p>
+  <div class="alert">Te rogamos que revises atentamente los detalles de tu pedido antes de finalizar la compra.</div>
+
+  <h3>1. Productos defectuosos, dañados o erróneos</h3>
+  <p>Si el producto que recibes presenta algún defecto de fabricación, daños derivados del transporte o si ha habido un error en la cantidad o modelo enviado, nos haremos cargo de enviarte un producto de sustitución de forma totalmente gratuita.</p>
+  <p>Para gestionar la reposición debes:</p>
+  <ul>
+    <li>Ponerte en contacto con nosotros en <a href="mailto:pedidos@mibookeo.es">pedidos@mibookeo.es</a> dentro de un plazo máximo de <strong>14 días</strong> desde la recepción del pedido.</li>
+    <li>Adjuntar fotografías claras del producto defectuoso, del embalaje y una descripción del problema.</li>
+  </ul>
+  <div class="alert">No nos haremos responsables si el defecto o error se debe a un fallo en el diseño o archivo proporcionado directamente por el cliente.</div>
+
+  <h3>2. Incidencias en la entrega y paquetes devueltos</h3>
+
+  <p><strong>Dirección incorrecta o incompleta:</strong> Si la dirección de envío es incorrecta o insuficiente, el paquete será devuelto y desechado. Para recibirlo deberás realizar un nuevo pedido abonando los gastos correspondientes.</p>
+
+  <p><strong>Pedido rechazado:</strong> Si rechazas la entrega del paquete, este será devuelto y desechado. Para recibirlo de nuevo deberás gestionar un nuevo pedido con sus correspondientes costes.</p>
+
+  <p><strong>Paquetes no reclamados:</strong> Si no estás disponible en la dirección de entrega, el paquete podrá depositarse en la oficina de correos o punto de recogida local. Es responsabilidad del cliente recogerlo en el plazo indicado.</p>
+
+  <div class="highlight">Si el paquete es devuelto por no haber sido reclamado, ponte en contacto con nosotros en <a href="mailto:pedidos@mibookeo.es">pedidos@mibookeo.es</a>. Deberás realizar un nuevo pedido y te reembolsaremos el precio del producto original, pero los costes del nuevo envío correrán por tu cuenta.</div>
+
+</div>
+
+<footer>
+  <p>© 2026 Bookeo · <a href="index.html">mibookeo.es</a> · <a href="mailto:pedidos@mibookeo.es">pedidos@mibookeo.es</a></p>
+</footer>
+
+</body>
+</html>
