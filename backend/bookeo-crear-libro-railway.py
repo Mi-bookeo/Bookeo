@@ -1,0 +1,1116 @@
+"""
+╔══════════════════════════════════════════════════════╗
+║           BOOKEO MVP · Creador de libros             ║
+║         mibookeo.es · Versión 3.0                    ║
+╚══════════════════════════════════════════════════════╝
+
+NUEVA LÓGICA: Python decide los layouts, la IA solo agrupa.
+Sin huecos posibles. Sin QR solos. Resultados perfectos.
+
+REQUIERE:
+  pip3 install anthropic pillow reportlab opencv-python-headless "qrcode[pil]"
+
+USAR:
+  1. Edita CONFIGURACIÓN
+  2. python3 bookeo_crear_libro.py
+"""
+
+import os, io, sys, json, base64, smtplib, datetime, re, math
+from pathlib import Path
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+
+from PIL import Image, ExifTags, ImageStat, ImageOps
+from reportlab.lib.pagesizes import mm
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+
+import anthropic
+
+try:
+    import qrcode
+    QRCODE_OK = True
+except ImportError:
+    QRCODE_OK = False
+
+try:
+    import cv2
+    import numpy as np
+    OPENCV_OK = True
+    # Verificar que los clasificadores están disponibles
+    _cas_test = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    if _cas_test.empty():
+        OPENCV_OK = False
+        print("⚠ OpenCV: clasificador de caras no encontrado")
+except ImportError:
+    OPENCV_OK = False
+    print("⚠ OpenCV no disponible — recorte centrado sin detección de caras")
+
+# ═══════════════════════════════════════════════════════
+#  CONFIGURACIÓN — variables de entorno de Railway
+#  No hay config local — todo viene del backend
+# ═══════════════════════════════════════════════════════
+
+CLAUDE_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+
+# ═══════════════════════════════════════════════════════
+#  FUNCIÓN PRINCIPAL — llamada por el backend FastAPI
+# ═══════════════════════════════════════════════════════
+
+def crear_libro(fotos_rutas, videos_rutas, titulo, nombre_cliente,
+                qr_urls, carpeta_sal, carpeta_temp):
+    """
+    Función principal llamada por main.py (FastAPI) cuando el cliente paga.
+
+    fotos_rutas   → lista de rutas absolutas de las fotos subidas
+    videos_rutas  → lista de rutas absolutas de los vídeos subidos
+    titulo        → título del libro que escribió el cliente
+    nombre_cliente→ nombre del cliente
+    qr_urls       → dict {nombre_video: url_drive} con las URLs reales de Drive
+    carpeta_sal   → carpeta donde guardar el PDF final
+    carpeta_temp  → carpeta temporal para fotogramas
+
+    Devuelve: ruta del PDF generado
+    """
+    log(f"Iniciando creación del libro: {titulo}", "📖")
+    log(f"Fotos: {len(fotos_rutas)} · Vídeos: {len(videos_rutas)}", "📁")
+
+    os.makedirs(carpeta_sal, exist_ok=True)
+    os.makedirs(carpeta_temp, exist_ok=True)
+
+    exts_foto = {".jpg",".jpeg",".png",".heic",".heif",".tiff"}
+    exts_vid  = {".mp4",".mov",".avi",".m4v",".mkv",".wmv"}
+
+    # 1. Cargar fotos
+    fotos = []
+    for ruta in fotos_rutas:
+        ext = Path(ruta).suffix.lower()
+        if ext in exts_foto:
+            fecha, fuente = leer_fecha(ruta)
+            fotos.append({"ruta":ruta,"fecha":fecha,"nombre":os.path.basename(ruta),"fuente_fecha":fuente})
+
+    # 2. Cargar vídeos
+    videos = []
+    for ruta in videos_rutas:
+        ext = Path(ruta).suffix.lower()
+        if ext in exts_vid:
+            fecha, fuente = leer_fecha(ruta)
+            videos.append({"ruta":ruta,"fecha":fecha,"nombre":os.path.basename(ruta),"fuente_fecha":fuente})
+
+    fotos.sort(key=lambda x: x["fecha"])
+    log(f"{len(fotos)} fotos · {len(videos)} vídeos ordenados", "✅")
+
+    if len(fotos) < 2:
+        raise ValueError("Se necesitan al menos 2 fotos para crear el libro")
+
+    # 3. Procesar vídeos — usar URLs reales de Drive
+    qr_map = {}
+    if videos:
+        for v in videos:
+            nombre_v = v["nombre"]
+            if nombre_v in qr_urls:
+                # Buscar foto cercana por fecha
+                mejor_foto = None
+                mejor_diff = float("inf")
+                for f in fotos:
+                    diff = abs((f["fecha"]-v["fecha"]).total_seconds())/60
+                    if diff < mejor_diff:
+                        mejor_diff = diff; mejor_foto = f
+                if mejor_foto and mejor_diff <= 120:
+                    qr_map[mejor_foto["nombre"]] = qr_urls[nombre_v]
+                    log(f"  · QR '{nombre_v}' → junto a '{mejor_foto['nombre']}'", "🔗")
+                else:
+                    frame = extraer_fotograma(v["ruta"], carpeta_temp)
+                    if frame:
+                        nb_frame = os.path.basename(frame)
+                        fotos.append({"ruta":frame,"fecha":v["fecha"],"nombre":nb_frame,
+                                      "fuente_fecha":"video","es_frame_video":True})
+                        qr_map[nb_frame] = qr_urls[nombre_v]
+                        fotos.sort(key=lambda x: x["fecha"])
+                        log(f"  · Fotograma '{nb_frame}' con QR real", "🎬")
+
+    # 4. Diccionario y días
+    fotos_dict = {f["nombre"]: f for f in fotos}
+    dias = {}
+    for f in fotos:
+        dia = f["fecha"].strftime("%Y-%m-%d")
+        dias.setdefault(dia, []).append(f)
+
+    # 5. IA agrupa las fotos
+    diseño = analizar_con_ia(fotos, dias)
+    log(f"Tipo: {diseño['tipo'].upper()} · {diseño['titulo']}", "🎨")
+
+    # 6. Generar PDF
+    titulo_final = titulo if titulo else diseño.get("titulo","Mi Álbum")
+    subtitulo = diseño.get("subtitulo","")
+    nb = nombre_cliente.lower().replace(" ","_")
+    r_final = os.path.join(carpeta_sal, f"bookeo_{nb}.pdf")
+
+    generar_pdf(diseño, fotos_dict, qr_map, r_final, titulo_final, subtitulo, do_wm=False)
+
+    # 7. Limpiar temporales
+    import shutil
+    if os.path.exists(carpeta_temp):
+        shutil.rmtree(carpeta_temp, ignore_errors=True)
+
+    log(f"PDF listo: {r_final}", "✅")
+    return r_final
+
+# ═══════════════════════════════════════════════════════
+#  MEDIDAS
+# ═══════════════════════════════════════════════════════
+
+AW = 208
+AH = 208
+MG = 10     # margen interior mm
+GAP = 3     # separación entre fotos mm
+
+QR_URL_PRUEBA = ""  # se pasa por parámetro desde el backend
+MIN_PPI_OK  = 180
+MIN_PPI_BEST = 250
+
+CV  = (125/255, 184/255, 152/255)
+CO  = (26/255,  26/255,  46/255)
+CCL = (0.96, 0.94, 0.90)
+
+# ═══════════════════════════════════════════════════════
+#  LOG
+# ═══════════════════════════════════════════════════════
+
+def log(msg, e="→"):
+    print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] {e} {msg}")
+
+def set_negro(c):
+    """Negro enriquecido CMYK para textos — mejor en impresión Gelato."""
+    # C60 M60 Y60 K100 = negro enriquecido
+    c.setFillColorCMYK(0.60, 0.60, 0.60, 1.0)
+
+# ═══════════════════════════════════════════════════════
+#  FECHAS
+# ═══════════════════════════════════════════════════════
+
+def leer_fecha(ruta):
+    nombre = os.path.basename(ruta)
+    try:
+        img = Image.open(ruta)
+        exif = img._getexif()
+        if exif:
+            for tid, val in exif.items():
+                if ExifTags.TAGS.get(tid) in ["DateTimeOriginal","DateTime","DateTimeDigitized"] and isinstance(val,str):
+                    try:
+                        f = datetime.datetime.strptime(val.strip(), "%Y:%m:%d %H:%M:%S")
+                        if f.year > 2000: return f, "exif"
+                    except: pass
+    except: pass
+    for pat in [r'(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})',
+                r'IMG-(\d{4})(\d{2})(\d{2})-WA\d+',
+                r'(\d{4})(\d{2})(\d{2})']:
+        m = re.search(pat, nombre)
+        if m:
+            try:
+                g = m.groups()
+                a,me,d = int(g[0]),int(g[1]),int(g[2])
+                h = int(g[3]) if len(g)>3 else 12
+                mi = int(g[4]) if len(g)>4 else 0
+                if 2000<=a<=2030 and 1<=me<=12 and 1<=d<=31:
+                    return datetime.datetime(a,me,d,h,mi), "nombre"
+            except: pass
+    return datetime.datetime.fromtimestamp(os.path.getmtime(ruta)), "modificacion"
+
+# ═══════════════════════════════════════════════════════
+#  OPENCV — RECORTE INTELIGENTE CON CARAS
+# ═══════════════════════════════════════════════════════
+
+def detectar_caras(ruta):
+    """Detecta caras en una imagen y devuelve su bounding box total."""
+    if not OPENCV_OK: return None
+    try:
+        img_pil = Image.open(ruta).convert("RGB")
+        img_pil = ImageOps.exif_transpose(img_pil)
+        cv_img = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+        gris = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+        gris_eq = cv2.equalizeHist(gris)
+        cas = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+
+        # Dos intentos con distintos parámetros
+        det = cas.detectMultiScale(gris_eq, scaleFactor=1.05, minNeighbors=4, minSize=(20,20))
+        if len(det) == 0:
+            det = cas.detectMultiScale(gris_eq, scaleFactor=1.1, minNeighbors=3, minSize=(15,15))
+        if len(det) == 0:
+            return None
+
+        caras = det.tolist()
+        x1 = min(c[0] for c in caras)
+        y1 = min(c[1] for c in caras)
+        x2 = max(c[0]+c[2] for c in caras)
+        y2 = max(c[1]+c[3] for c in caras)
+        iw, ih = img_pil.size
+        return {"x1":x1,"y1":y1,"x2":x2,"y2":y2,"iw":iw,"ih":ih,"n":len(caras)}
+    except:
+        return None
+
+def recortar_con_caras(ruta, w_mm, h_mm):
+    """
+    Recorte inteligente con doble verificación de caras.
+    1. Detecta caras y calcula zona segura
+    2. Recorta manteniendo cabezas completas
+    3. Verifica que las caras siguen visibles tras el recorte
+    4. Si las caras se cortaron ajusta el recorte
+    """
+    try:
+        img = Image.open(ruta).convert("RGB")
+        img = ImageOps.exif_transpose(img)
+        iw, ih = img.size
+        ratio_z = w_mm / h_mm
+        ratio_i = iw / ih
+
+        # Detectar caras
+        caras = detectar_caras(ruta)
+
+        if caras:
+            cx_cara = (caras["x1"] + caras["x2"]) / 2   # centro horizontal
+            cy_cara = (caras["y1"] + caras["y2"]) / 2   # centro vertical
+            cara_h  = caras["y2"] - caras["y1"]
+            cara_w  = caras["x2"] - caras["x1"]
+
+            # Margen EXTRA arriba para que la cabeza nunca se corte
+            # 150% de la altura de la cara hacia arriba
+            margen_arriba = int(cara_h * 1.5)
+            # Punto más alto que debe estar en el recorte
+            y_minimo_visible = max(0, caras["y1"] - margen_arriba)
+            # Punto más bajo (barbilla + margen)
+            y_maximo_visible = min(ih, caras["y2"] + int(cara_h * 0.4))
+
+            cx = cx_cara  # centrar horizontalmente en las caras
+        else:
+            cx = iw / 2
+            y_minimo_visible = 0
+            y_maximo_visible = ih
+
+        # ── Calcular el recorte ──
+        if ratio_i > ratio_z:
+            # Imagen más ancha → recortar lados
+            nw = int(ih * ratio_z)
+            nw = min(nw, iw)
+            x0 = int(cx - nw / 2)
+            x0 = max(0, min(x0, iw - nw))
+            recorte = (x0, 0, x0 + nw, ih)
+        else:
+            # Imagen más alta → recortar arriba/abajo
+            nh = int(iw / ratio_z)
+            nh = min(nh, ih)
+
+            if caras:
+                # Intentar que y_minimo_visible quede dentro del recorte
+                # Posicionar para que las caras estén en el tercio superior
+                y0_ideal = y_minimo_visible
+                y0 = max(0, min(y0_ideal, ih - nh))
+
+                # DOBLE CHECK: verificar que cara_y1 (frente) está dentro del recorte
+                if y0 > caras["y1"] - int(cara_h * 0.3):
+                    # La cabeza se cortaría → ajustar
+                    y0 = max(0, caras["y1"] - int(cara_h * 1.5))
+                    y0 = max(0, min(y0, ih - nh))
+
+                # Verificar que cara_y2 (barbilla) también está dentro
+                if y0 + nh < caras["y2"]:
+                    # La barbilla se sale → centrar en las caras
+                    y0 = max(0, int(cy_cara - nh * 0.45))
+                    y0 = max(0, min(y0, ih - nh))
+            else:
+                y0 = int(ih / 2 - nh / 2)
+                y0 = max(0, min(y0, ih - nh))
+
+            recorte = (0, y0, iw, y0 + nh)
+
+        img = img.crop(recorte)
+
+        if caras:
+            log(f"  · {caras['n']} cara(s) · recorte OK {os.path.basename(ruta)}", "")
+
+        return img
+
+    except Exception as e:
+        log(f"  · Error recortando {os.path.basename(ruta)}: {e}", "")
+        try:
+            img = Image.open(ruta).convert("RGB")
+            return ImageOps.exif_transpose(img)
+        except:
+            return None
+
+def ppi(ruta, w_mm, h_mm):
+    try:
+        img = Image.open(ruta)
+        pw, ph = img.size
+        return min(pw/(w_mm/25.4), ph/(h_mm/25.4))
+    except: return 300
+
+# ═══════════════════════════════════════════════════════
+#  DIBUJAR FOTO EN ZONA — siempre con recorte inteligente
+# ═══════════════════════════════════════════════════════
+
+def foto_zona(c, ruta, x, y, w, h, check_ppi=True):
+    """Dibuja foto en zona (en mm). Recorta centrando caras."""
+    if not ruta or not os.path.exists(ruta):
+        log(f"  · Foto no encontrada: {ruta}", "⚠")
+        return
+    img = recortar_con_caras(ruta, w, h)
+    if img is None: return
+
+    if check_ppi:
+        p = ppi(ruta, w, h)
+        if p < MIN_PPI_OK:
+            log(f"  🔴 {os.path.basename(ruta)} {int(p)} PPI baja calidad", "")
+        elif p < MIN_PPI_BEST:
+            log(f"  🟡 {os.path.basename(ruta)} {int(p)} PPI aceptable", "")
+
+    iw, ih = img.size
+    buf = io.BytesIO()
+    img.save(buf, "JPEG", quality=95)
+    buf.seek(0)
+    rl = ImageReader(buf)
+
+    xm, ym, wm, hm = x*mm, y*mm, w*mm, h*mm
+    c.saveState()
+    p2 = c.beginPath(); p2.rect(xm, ym, wm, hm)
+    c.clipPath(p2, stroke=0)
+    ri = iw/ih; rz = wm/hm
+    if ri > rz:
+        hd=hm; wd=hm*ri; xd=xm+(wm-wd)/2; yd=ym
+    else:
+        wd=wm; hd=wm/ri; xd=xm; yd=ym+(hm-hd)/2
+    c.drawImage(rl, xd, yd, wd, hd)
+    c.restoreState()
+
+# ═══════════════════════════════════════════════════════
+#  QR — EN ESQUINA SOBRE LA FOTO, SIN TAPAR NADA
+# ═══════════════════════════════════════════════════════
+
+def dibujar_qr_sobre_foto(c, x_foto, y_foto, w_foto, h_foto, url, ruta_foto=None):
+    """
+    QR en esquina inferior derecha SOBRE la foto.
+    Fondo semitransparente para que se lea bien.
+    Sin tapar el sujeto principal (siempre en esquina).
+    """
+    s = QR_MM * mm
+    mg_qr = 2 * mm
+    # Posición: esquina inferior derecha de la foto
+    qx = (x_foto + w_foto)*mm - s - mg_qr
+    qy = y_foto*mm + mg_qr
+
+    # Detectar luminosidad de la esquina
+    color_pts = CO
+    color_fondo = (0.96, 0.94, 0.90)
+    if ruta_foto and os.path.exists(ruta_foto):
+        try:
+            img = Image.open(ruta_foto).convert("RGB")
+            iw, ih = img.size
+            zona = img.crop((int(iw*0.75), 0, iw, int(ih*0.25)))
+            lum = sum(ImageStat.Stat(zona).mean[:3])/3
+            if lum < 100:
+                color_pts = (1.0, 1.0, 1.0)
+                color_fondo = (0.06, 0.06, 0.12)
+        except: pass
+
+    # Fondo del QR
+    pad = 1.5*mm
+    c.setFillColorRGB(*color_fondo)
+    c.roundRect(qx-pad, qy-pad, s+pad*2, s+pad*2, 1.5*mm, fill=1, stroke=0)
+
+    # QR real o patrón decorativo
+    if QRCODE_OK:
+        try:
+            def hex_col(t): return "#{:02x}{:02x}{:02x}".format(int(t[0]*255),int(t[1]*255),int(t[2]*255))
+            qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=10, border=1)
+            qr.add_data(url); qr.make(fit=True)
+            qri = qr.make_image(fill_color=hex_col(color_pts), back_color=hex_col(color_fondo))
+            qri = qri.resize((200,200), Image.LANCZOS)
+            buf = io.BytesIO(); qri.save(buf, "PNG"); buf.seek(0)
+            c.drawImage(ImageReader(buf), qx, qy, s, s, mask='auto')
+        except: pass
+    else:
+        # Patrón simple si no hay qrcode
+        c.setFillColorRGB(*color_pts)
+        cell = s/8
+        pat = [[1,1,1,1,1,1,1,0],[1,0,0,0,0,0,1,0],[1,0,1,1,1,0,1,0],
+               [1,0,0,0,0,0,1,0],[1,1,1,1,1,1,1,0],[0,0,0,0,0,0,0,1],[1,0,1,0,1,1,0,1],[0,1,0,1,0,0,1,0]]
+        for r in range(8):
+            for col in range(8):
+                if pat[r][col]:
+                    c.rect(qx+col*cell, qy+(7-r)*cell, cell-0.2*mm, cell-0.2*mm, fill=1, stroke=0)
+
+    # Sin texto encima del QR — el QR habla por sí solo
+
+# ═══════════════════════════════════════════════════════
+#  WATERMARK
+# ═══════════════════════════════════════════════════════
+
+def wm(c, aw, ah):
+    c.saveState()
+    c.setFillColorRGB(0.55,0.55,0.55)
+    c.setFont("Helvetica-Bold", 18)
+    c.translate(aw/2, ah/2); c.rotate(38)
+    for i in range(-4,5):
+        for j in range(-3,4):
+            c.drawCentredString(i*160, j*100, "MUESTRA · mibookeo.es")
+    c.restoreState()
+
+# ═══════════════════════════════════════════════════════
+#  LAYOUTS — Python decide según número de fotos
+#  REGLA: nunca huecos, nunca QR solos
+# ═══════════════════════════════════════════════════════
+
+def bg_blanco(c):
+    c.setFillColorRGB(1,1,1)
+    c.rect(0, 0, AW*mm, AH*mm, fill=1, stroke=0)
+
+def linea_verde(c, x1, y1, x2, y2):
+    c.setStrokeColorRGB(*CV); c.setLineWidth(0.5)
+    c.line(x1*mm, y1*mm, x2*mm, y2*mm)
+
+def texto_pie(c, texto, y_mm=MG/2+1):
+    if not texto: return
+    c.setFillColorRGB(*CO)
+    c.setFont("Helvetica-Oblique", 2.8*mm)
+    c.drawCentredString(AW*mm/2, y_mm*mm, texto)
+
+def dibujar_portada(c, ruta, titulo, subtitulo, do_wm):
+    bg_blanco(c)
+    if ruta:
+        foto_zona(c, ruta, 0, MG+18, AW, AH-MG-18, check_ppi=False)
+    c.setFillColorRGB(1,1,1)
+    c.rect(0, 0, AW*mm, (MG+18)*mm, fill=1, stroke=0)
+    set_negro(c)
+    c.setFont("Helvetica-Bold", 8*mm)
+    c.drawCentredString(AW*mm/2, (MG+10)*mm, titulo)
+    if subtitulo:
+        c.setFillColorRGB(0.5,0.5,0.5)
+        c.setFont("Helvetica", 3*mm)
+        c.drawCentredString(AW*mm/2, (MG+4)*mm, subtitulo)
+    if do_wm: wm(c, AW*mm, AH*mm)
+
+def dibujar_lomo(c, titulo, color_fondo=None, do_wm=False):
+    """
+    Lomo del libro — página separada que Gelato usa para el lomo físico.
+    Título en vertical DESCENDENTE (estándar España):
+    al inclinar la cabeza a la derecha se lee de izquierda a derecha.
+    El color del lomo es el mismo que la portada.
+    """
+    aw, ah = AW*mm, AH*mm
+    # Fondo del lomo — mismo color que portada/contraportada
+    if color_fondo:
+        c.setFillColorRGB(*color_fondo)
+    else:
+        c.setFillColorRGB(1,1,1)
+    c.rect(0, 0, aw, ah, fill=1, stroke=0)
+
+    # Título vertical descendente centrado
+    c.saveState()
+    c.translate(aw/2, ah/2)
+    c.rotate(-90)
+    set_negro(c)
+    c.setFont("Helvetica-Bold", 4*mm)
+    c.drawCentredString(0, 0, titulo)
+    c.restoreState()
+
+    if do_wm: wm(c, aw, ah)
+
+def dibujar_contraportada(c, do_wm):
+    bg_blanco(c)
+    c.setFillColorRGB(0.65,0.65,0.65)
+    c.setFont("Helvetica", 2.8*mm)
+    c.drawCentredString(AW*mm/2, (MG+2)*mm, "Bookeo · mibookeo.es")
+    if do_wm: wm(c, AW*mm, AH*mm)
+
+def dibujar_pagina_blanca(c):
+    bg_blanco(c)
+
+def layout_1(c, fotos_rutas, qr_idx, qr_url, pie, do_wm):
+    """1 foto — ocupa toda la página a sangre."""
+    bg_blanco(c)
+    r = fotos_rutas[0]
+    foto_zona(c, r, 0, 0, AW, AH)
+    if qr_idx == 0:
+        dibujar_qr_sobre_foto(c, 0, 0, AW, AH, qr_url, r)
+    texto_pie(c, pie)
+    if do_wm: wm(c, AW*mm, AH*mm)
+
+def layout_2H(c, fotos_rutas, qr_idx, qr_url, pie, do_wm):
+    """2 fotos lado a lado."""
+    bg_blanco(c)
+    pie_h = 8 if pie else 0
+    fw = (AW - MG*2 - GAP) / 2
+    fh = AH - MG*2 - pie_h
+    y0 = MG + pie_h
+    for i, r in enumerate(fotos_rutas[:2]):
+        x = MG + i*(fw+GAP)
+        foto_zona(c, r, x, y0, fw, fh)
+        if qr_idx == i:
+            dibujar_qr_sobre_foto(c, x, y0, fw, fh, qr_url, r)
+    texto_pie(c, pie)
+    if do_wm: wm(c, AW*mm, AH*mm)
+
+def layout_2V(c, fotos_rutas, qr_idx, qr_url, pie, do_wm):
+    """2 fotos apiladas."""
+    bg_blanco(c)
+    pie_h = 8 if pie else 0
+    fh = (AH - MG*2 - GAP - pie_h) / 2
+    fw = AW - MG*2
+    y0 = MG + pie_h
+    for i, r in enumerate(fotos_rutas[:2]):
+        y = y0 + i*(fh+GAP)
+        foto_zona(c, r, MG, y, fw, fh)
+        if qr_idx == i:
+            dibujar_qr_sobre_foto(c, MG, y, fw, fh, qr_url, r)
+    texto_pie(c, pie)
+    if do_wm: wm(c, AW*mm, AH*mm)
+
+def layout_3(c, fotos_rutas, qr_idx, qr_url, pie, do_wm):
+    """3 fotos: 1 grande izquierda + 2 apiladas derecha."""
+    bg_blanco(c)
+    pie_h = 8 if pie else 0
+    pw = AW * 0.60 - MG
+    sh = (AH - MG*2 - GAP - pie_h) / 2
+    sw = AW - MG - pw - GAP - MG
+    zh = AH - MG*2 - pie_h
+    y0 = MG + pie_h
+
+    r0 = fotos_rutas[0]
+    foto_zona(c, r0, MG, y0, pw, zh)
+    if qr_idx == 0: dibujar_qr_sobre_foto(c, MG, y0, pw, zh, qr_url, r0)
+
+    sx = MG + pw + GAP
+    for i, r in enumerate(fotos_rutas[1:3]):
+        y = y0 + i*(sh+GAP)
+        foto_zona(c, r, sx, y, sw, sh)
+        if qr_idx == i+1: dibujar_qr_sobre_foto(c, sx, y, sw, sh, qr_url, r)
+
+    texto_pie(c, pie)
+    if do_wm: wm(c, AW*mm, AH*mm)
+
+def layout_4(c, fotos_rutas, qr_idx, qr_url, pie, do_wm):
+    """4 fotos en cuadrícula 2x2."""
+    bg_blanco(c)
+    pie_h = 8 if pie else 0
+    cw = (AW - MG*2 - GAP) / 2
+    ch = (AH - MG*2 - GAP - pie_h) / 2
+    y0 = MG + pie_h
+    pos = [(MG, y0+ch+GAP), (MG+cw+GAP, y0+ch+GAP), (MG, y0), (MG+cw+GAP, y0)]
+    for i, r in enumerate(fotos_rutas[:4]):
+        x, y = pos[i]
+        foto_zona(c, r, x, y, cw, ch)
+        if qr_idx == i: dibujar_qr_sobre_foto(c, x, y, cw, ch, qr_url, r)
+    texto_pie(c, pie)
+    if do_wm: wm(c, AW*mm, AH*mm)
+
+def layout_titulo_capitulo(c, titulo, subtitulo, fotos_rutas, variante, do_wm):
+    """Título del capítulo arriba (25%) + fotos abajo (75%). Sin fondo gris."""
+    bg_blanco(c)
+    banda_h = AH * 0.25
+    foto_h = AH - banda_h - MG
+
+    # Sin líneas decorativas — página limpia
+
+    # Título sobre blanco limpio
+    cy = (AH - banda_h/2) * mm
+    set_negro(c)
+    c.setFont("Helvetica-Bold", 9*mm)
+    c.drawCentredString(AW*mm/2, cy+3*mm, titulo)
+    if subtitulo:
+        c.setFillColorRGB(0.5,0.5,0.5)
+        c.setFont("Helvetica-Oblique", 3.2*mm)
+        c.drawCentredString(AW*mm/2, cy-4*mm, subtitulo)
+
+    # Fotos en zona inferior — siempre llena
+    n = len(fotos_rutas)
+    if n == 0: pass
+    elif n == 1:
+        foto_zona(c, fotos_rutas[0], MG, MG, AW-MG*2, foto_h)
+    elif variante % 2 == 0 or n == 2:
+        fw = (AW-MG*2-GAP)/2
+        for j, r in enumerate(fotos_rutas[:2]):
+            foto_zona(c, r, MG+j*(fw+GAP), MG, fw, foto_h)
+    else:
+        foto_zona(c, fotos_rutas[0], MG, MG, AW-MG*2, foto_h)
+
+    if do_wm: wm(c, AW*mm, AH*mm)
+
+# ═══════════════════════════════════════════════════════
+#  MOTOR DE LAYOUT — Python decide según nº de fotos
+# ═══════════════════════════════════════════════════════
+
+def elegir_layout(fotos_grupo, layout_anterior="", variante=0):
+    """
+    Elige el layout según cuántas fotos hay.
+    Sin huecos posibles — matemáticamente imposible.
+    Varía para evitar repeticiones.
+    """
+    n = len(fotos_grupo)
+    if n == 0: return None, []
+    if n == 1: return "1", fotos_grupo
+
+    if n == 2:
+        # Alternar entre horizontal y vertical
+        # Si el anterior fue 2H → poner 2V y viceversa
+        if layout_anterior == "2H": return "2V", fotos_grupo
+        elif layout_anterior == "2V": return "2H", fotos_grupo
+        elif variante % 2 == 0: return "2H", fotos_grupo
+        else: return "2V", fotos_grupo
+
+    if n == 3: return "3", fotos_grupo
+
+    if n >= 4:
+        # No poner mosaico si el anterior también era mosaico
+        if layout_anterior == "4":
+            # Dividir en 3+1 o 2+2
+            if variante % 2 == 0:
+                return "3", fotos_grupo[:3]  # las demás van a la siguiente página
+            else:
+                return "2H", fotos_grupo[:2]
+        return "4", fotos_grupo[:4]
+
+    return "1", fotos_grupo[:1]
+
+def paginas_para_grupo(fotos, qr_map, texto="", variante_inicio=0):
+    """
+    Convierte un grupo de fotos en páginas.
+    qr_map: dict {nombre_foto: url_video} para fotos con QR
+    Garantiza que TODAS las fotos se usan y no hay huecos.
+    """
+    paginas = []
+    idx = 0
+    variante = variante_inicio
+    layout_ant = ""
+
+    while idx < len(fotos):
+        restantes = len(fotos) - idx
+
+        # Decidir cuántas fotos coger en esta página
+        if restantes >= 4 and layout_ant != "4":
+            n_coger = 4
+        elif restantes >= 4 and layout_ant == "4":
+            n_coger = 3  # evitar mosaico consecutivo
+        elif restantes == 3:
+            n_coger = 3
+        elif restantes == 2:
+            n_coger = 2
+        else:
+            n_coger = 1
+
+        grupo = fotos[idx:idx+n_coger]
+        layout, fotos_layout = elegir_layout(grupo, layout_ant, variante)
+
+        if layout is None:
+            break
+
+        # Buscar QR en este grupo
+        qr_idx = -1
+        qr_url = QR_URL_PRUEBA
+        for fi, foto in enumerate(fotos_layout):
+            nombre = foto["nombre"] if isinstance(foto, dict) else os.path.basename(foto)
+            if nombre in qr_map:
+                qr_idx = fi
+                qr_url = qr_map[nombre]
+                break
+
+        paginas.append({
+            "layout": layout,
+            "fotos": fotos_layout,
+            "qr_idx": qr_idx,
+            "qr_url": qr_url,
+            "texto": texto if idx == 0 else ""
+        })
+
+        idx += len(fotos_layout)
+        layout_ant = layout
+        variante += 1
+
+    return paginas
+
+# ═══════════════════════════════════════════════════════
+#  IA — SOLO AGRUPA, PYTHON DECIDE LOS LAYOUTS
+# ═══════════════════════════════════════════════════════
+
+def analizar_con_ia(fotos, dias):
+    log("Conectando con Claude API...", "🤖")
+    cli = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+
+    # Listado completo de fotos con fechas
+    listado = f"INVENTARIO COMPLETO — {len(fotos)} fotos:\n"
+    for f in fotos:
+        es_frame = " [FOTOGRAMA VIDEO-QR]" if f.get("es_frame_video") else ""
+        listado += f"  {f['fecha'].strftime('%d/%m/%Y')} · {f['nombre']}{es_frame}\n"
+
+    # Miniaturas distribuidas (máx 50)
+    MAX = 50
+    muestra = fotos if len(fotos) <= MAX else [fotos[int(i*len(fotos)/MAX)] for i in range(MAX)]
+    if fotos[-1] not in muestra: muestra[-1] = fotos[-1]
+
+    contenido = [{"type":"text","text":listado}]
+    for f in muestra:
+        try:
+            img = Image.open(f["ruta"]).convert("RGB")
+            img.thumbnail((100,100), Image.LANCZOS)
+            buf = io.BytesIO(); img.save(buf,"JPEG",quality=65)
+            b64 = base64.standard_b64encode(buf.getvalue()).decode()
+            contenido.append({"type":"image","source":{"type":"base64","media_type":"image/jpeg","data":b64}})
+            contenido.append({"type":"text","text":f"· {f['nombre']} {f['fecha'].strftime('%d/%m/%Y')}"})
+        except: pass
+
+    fecha_ini = min(f['fecha'] for f in fotos).strftime('%d/%m/%Y')
+    fecha_fin = max(f['fecha'] for f in fotos).strftime('%d/%m/%Y')
+
+    prompt = f"""Eres experto en libros de fotos para Bookeo. Tienes {len(fotos)} fotos del {fecha_ini} al {fecha_fin}.
+
+TU ÚNICA TAREA: agrupar las fotos en capítulos y elegir la portada. NO decides layouts — eso lo hace Python.
+
+TIPOS DE LIBRO:
+- bebe: agrupa por mes de vida. NUNCA mezcles fotos de meses distintos en un capítulo.
+- viaje: agrupa por día o destino
+- boda: preparativos → ceremonia → convite → fiesta
+- comunion: preparativos → iglesia → celebración
+- familiar: por estaciones (invierno/primavera/verano/otoño/navidad)
+- dia_madre / dia_padre: cronológico con protagonista principal
+- aniversario_persona: antiguo→reciente
+- anual: invierno→semana santa→verano→vuelta cole→navidad
+- otro: cronológico
+
+RESPONDE SOLO JSON compacto:
+{{"tipo":"bebe","tipo_desc":"primer año de vida","titulo":"Catalina · El primer año","subtitulo":"Febrero 2023 - Enero 2024","portada":"nombre_foto_portada.jpg","capitulos":[{{"titulo":"Mes 1 · Febrero 2023","subtitulo":"Los primeros instantes","fotos":["foto1.jpg","foto2.jpg"]}}]}}
+
+REGLAS:
+- portada: la foto más impactante visualmente
+- Todos los nombres de foto deben estar EXACTAMENTE como en el inventario
+- Incluye TODAS las fotos del inventario en algún capítulo
+- Los capítulos deben tener entre 2 y 12 fotos
+- Máximo 2 fotos por capítulo si solo tienes 2 — no fuerces capítulos vacíos"""
+
+    contenido.append({"type":"text","text":prompt})
+
+    log(f"Enviando {len(muestra)} miniaturas + inventario de {len(fotos)} fotos...", "📷")
+
+    for intento in range(3):
+        try:
+            resp = cli.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=8000,
+                messages=[{"role":"user","content":contenido}]
+            )
+            txt = resp.content[0].text.strip()
+            if "```json" in txt: txt = txt.split("```json")[1].split("```")[0].strip()
+            elif "```" in txt: txt = txt.split("```")[1].split("```")[0].strip()
+
+            # Reparar JSON truncado
+            try:
+                d = json.loads(txt)
+            except:
+                # Cerrar lo que esté abierto
+                for _ in range(txt.count('[')-txt.count(']')): txt += ']'
+                for _ in range(txt.count('{')-txt.count('}')): txt += '}'
+                d = json.loads(txt)
+
+            log(f"Tipo: {d['tipo'].upper()} · {d['tipo_desc']}", "🎨")
+            log(f"Título: {d['titulo']}", "📖")
+            n_caps = len(d.get('capitulos',[]))
+            n_fotos_ia = sum(len(cap.get('fotos',[])) for cap in d.get('capitulos',[]))
+            log(f"Capítulos: {n_caps} · Fotos asignadas: {n_fotos_ia}/{len(fotos)}", "📄")
+            return d
+
+        except Exception as e:
+            log(f"Intento {intento+1} fallido: {e}", "⚠")
+            if intento == 2: raise
+
+# ═══════════════════════════════════════════════════════
+#  GENERADOR DE PDF
+# ═══════════════════════════════════════════════════════
+
+def generar_pdf(diseño, fotos_dict, qr_map, ruta, titulo, subtitulo, do_wm=False):
+    """
+    diseño: resultado de la IA con capitulos y fotos
+    fotos_dict: {nombre: foto_dict}
+    qr_map: {nombre_foto: url_video}
+    """
+    aw, ah = AW*mm, AH*mm
+    tipo_txt = "con marca de agua" if do_wm else "limpio"
+    log(f"Generando PDF {tipo_txt}...", "📄")
+
+    c = canvas.Canvas(ruta, pagesize=(aw, ah))
+    c.setTitle(titulo); c.setAuthor("Bookeo · mibookeo.es")
+
+    fotos_usadas = set()
+    capitulo_variante = 0
+
+    # ── PORTADA ──
+    portada_nombre = diseño.get("portada","")
+    portada_ruta = fotos_dict.get(portada_nombre, {}).get("ruta","") if portada_nombre else ""
+    if not portada_ruta and fotos_dict:
+        portada_ruta = list(fotos_dict.values())[0]["ruta"]
+    dibujar_portada(c, portada_ruta, titulo, subtitulo, do_wm)
+    c.showPage()
+    fotos_usadas.add(portada_nombre)
+
+    # ── PÁGINA EN BLANCO detrás de portada ──
+    dibujar_pagina_blanca(c); c.showPage()
+
+    # ── CAPÍTULOS ──
+    for cap in diseño.get("capitulos", []):
+        tit_cap = cap.get("titulo","")
+        sub_cap = cap.get("subtitulo","")
+        nombres_cap = cap.get("fotos", [])
+
+        # Coger solo fotos disponibles y no usadas
+        fotos_cap = []
+        for nombre in nombres_cap:
+            if nombre in fotos_dict and nombre not in fotos_usadas:
+                fotos_cap.append(fotos_dict[nombre])
+                fotos_usadas.add(nombre)
+
+        if not fotos_cap:
+            continue
+
+        # Primera página del capítulo — título + fotos
+        # Siempre poner fotos en la zona inferior del título
+        fotos_titulo = fotos_cap[:2]
+        rutas_titulo = [f["ruta"] for f in fotos_titulo if f.get("ruta")]
+        # Si no hay fotos para el título usar las primeras disponibles
+        if not rutas_titulo and fotos_cap:
+            rutas_titulo = [fotos_cap[0]["ruta"]]
+        layout_titulo_capitulo(c, tit_cap, sub_cap, rutas_titulo, capitulo_variante, do_wm)
+        c.showPage()
+        capitulo_variante += 1
+
+        # Páginas con el resto de fotos del capítulo
+        fotos_resto = fotos_cap[len(fotos_titulo):]
+        if fotos_resto:
+            paginas = paginas_para_grupo(fotos_resto, qr_map, variante_inicio=capitulo_variante)
+            for pg in paginas:
+                rutas = [f["ruta"] if isinstance(f,dict) else f for f in pg["fotos"]]
+                kwargs = dict(fotos_rutas=rutas, qr_idx=pg["qr_idx"], qr_url=pg["qr_url"],
+                              pie=pg["texto"], do_wm=do_wm)
+                if pg["layout"] == "1": layout_1(c, **kwargs)
+                elif pg["layout"] == "2H": layout_2H(c, **kwargs)
+                elif pg["layout"] == "2V": layout_2V(c, **kwargs)
+                elif pg["layout"] == "3": layout_3(c, **kwargs)
+                elif pg["layout"] == "4": layout_4(c, **kwargs)
+                c.showPage()
+                capitulo_variante += 1
+
+    # ── FOTOS NO USADAS (red de seguridad) ──
+    fotos_sobrantes = [f for nombre, f in fotos_dict.items()
+                       if nombre not in fotos_usadas and f.get("ruta") and os.path.exists(f.get("ruta",""))]
+    if fotos_sobrantes:
+        log(f"  Añadiendo {len(fotos_sobrantes)} fotos sobrantes en orden cronológico...", "📸")
+        fotos_sobrantes.sort(key=lambda x: x["fecha"])
+        paginas = paginas_para_grupo(fotos_sobrantes, qr_map, variante_inicio=capitulo_variante)
+        for pg in paginas:
+            # Solo procesar si hay fotos reales
+            rutas = [f["ruta"] if isinstance(f,dict) else f for f in pg["fotos"]
+                     if (f.get("ruta") if isinstance(f,dict) else f) and
+                        os.path.exists(f.get("ruta","") if isinstance(f,dict) else f)]
+            if not rutas:
+                continue  # saltar páginas sin fotos válidas
+            kwargs = dict(fotos_rutas=rutas, qr_idx=pg["qr_idx"], qr_url=pg["qr_url"],
+                          pie=pg["texto"], do_wm=do_wm)
+            if pg["layout"] == "1": layout_1(c, **kwargs)
+            elif pg["layout"] == "2H": layout_2H(c, **kwargs)
+            elif pg["layout"] == "2V": layout_2V(c, **kwargs)
+            elif pg["layout"] == "3": layout_3(c, **kwargs)
+            elif pg["layout"] == "4": layout_4(c, **kwargs)
+            c.showPage()
+
+    # ── LOMO ──
+    # Página separada para el lomo físico del libro
+    # Gelato la usa para imprimir el título en el lomo
+    # Título vertical descendente — estándar España
+    dibujar_lomo(c, titulo_final, do_wm=do_wm)
+    c.showPage()
+
+    # ── CONTRAPORTADA ──
+    dibujar_contraportada(c, do_wm)
+    c.showPage()
+
+    c.save()
+    log(f"PDF completo guardado: {ruta}", "✅")
+    log(f"  · Páginas: portada + lomo + {len(diseño.get('capitulos',[]))} capítulos + contraportada", "📄")
+    # NOTA: Este PDF se envía al cliente SOLO tras el pago confirmado
+    # El backend main.py adjunta el PDF al email de confirmación
+    # y lo envía a Gelato para impresión — nunca antes del pago
+
+# ═══════════════════════════════════════════════════════
+#  VÍDEOS
+# ═══════════════════════════════════════════════════════
+
+def extraer_fotograma(ruta_video, carpeta_temp):
+    """
+    Extrae el mejor fotograma del vídeo.
+    Prioriza frames con caras bien encuadradas.
+    Si no hay caras elige el frame más nítido y bien iluminado.
+    """
+    if not OPENCV_OK: return None
+    try:
+        cap = cv2.VideoCapture(ruta_video)
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if total <= 0: cap.release(); return None
+
+        cas = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+
+        mejor = None
+        mejor_s = -1
+        mejor_tiene_cara = False
+
+        # Analizar frames en más puntos para encontrar el mejor
+        puntos = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80]
+        for pt in puntos:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(total*pt))
+            ret, fr = cap.read()
+            if not ret: continue
+
+            g = cv2.cvtColor(fr, cv2.COLOR_BGR2GRAY)
+            brillo = g.mean()
+            nitidez = cv2.Laplacian(g, cv2.CV_64F).var()
+
+            # Descartar frames muy oscuros o muy sobreexpuestos
+            if brillo < 30 or brillo > 220: continue
+
+            # Detectar caras en este frame
+            g_eq = cv2.equalizeHist(g)
+            caras = cas.detectMultiScale(g_eq, 1.1, 4, minSize=(20,20))
+            tiene_cara = len(caras) > 0
+
+            # Puntuación: frames con cara tienen prioridad
+            if tiene_cara and not mejor_tiene_cara:
+                # Primera cara encontrada → ya es mejor que cualquier sin cara
+                mejor = fr.copy()
+                mejor_s = nitidez
+                mejor_tiene_cara = True
+            elif tiene_cara and mejor_tiene_cara:
+                # Comparar entre frames con cara → elegir el más nítido
+                if nitidez > mejor_s:
+                    mejor = fr.copy()
+                    mejor_s = nitidez
+            elif not tiene_cara and not mejor_tiene_cara:
+                # Sin caras → elegir el más nítido y bien iluminado
+                s = nitidez * (1 - abs(brillo-120)/200)
+                if s > mejor_s:
+                    mejor = fr.copy()
+                    mejor_s = s
+
+        cap.release()
+
+        if mejor is None: return None
+
+        # Guardar el fotograma
+        os.makedirs(carpeta_temp, exist_ok=True)
+        nb = os.path.splitext(os.path.basename(ruta_video))[0]
+        ruta_jpg = os.path.join(carpeta_temp, f"frame_{nb}.jpg")
+
+        # Si hay cara → recortar para que se vea bien encuadrada
+        if mejor_tiene_cara and OPENCV_OK:
+            try:
+                g = cv2.cvtColor(mejor, cv2.COLOR_BGR2GRAY)
+                g_eq = cv2.equalizeHist(g)
+                caras = cas.detectMultiScale(g_eq, 1.1, 4, minSize=(20,20))
+                if len(caras) > 0:
+                    ih, iw = mejor.shape[:2]
+                    # Bounding box de todas las caras
+                    x1 = min(c[0] for c in caras)
+                    y1 = min(c[1] for c in caras)
+                    x2 = max(c[0]+c[2] for c in caras)
+                    y2 = max(c[1]+c[3] for c in caras)
+                    cara_h = y2 - y1
+                    cara_w = x2 - x1
+                    # Añadir margen generoso alrededor de las caras
+                    mg_arr = int(cara_h * 1.3)   # 130% arriba → no cortar cabeza
+                    mg_lat = int(cara_w * 0.6)   # 60% a los lados
+                    mg_abj = int(cara_h * 0.4)   # 40% abajo
+                    cx1 = max(0, x1 - mg_lat)
+                    cy1 = max(0, y1 - mg_arr)
+                    cx2 = min(iw, x2 + mg_lat)
+                    cy2 = min(ih, y2 + mg_abj)
+                    mejor = mejor[cy1:cy2, cx1:cx2]
+            except: pass
+
+        img_pil = Image.fromarray(cv2.cvtColor(mejor, cv2.COLOR_BGR2RGB))
+        img_pil.save(ruta_jpg, "JPEG", quality=92)
+        cara_txt = "con cara encuadrada" if mejor_tiene_cara else "sin cara · mejor frame"
+        log(f"  · Fotograma extraído · {cara_txt}", "")
+        return ruta_jpg
+
+    except Exception as e:
+        log(f"  · Error extrayendo fotograma: {e}", "")
+        return None
+
+def procesar_videos(videos, fotos, carpeta_temp):
+    if not videos: return {}
+    log(f"Procesando {len(videos)} vídeos...", "🎬")
+    qr_map = {}  # nombre_foto → url_video
+
+    for v in videos:
+        fecha_v = v["fecha"]
+        # Buscar foto cercana por fecha (hasta 2h)
+        foto_rel = None
+        mejor_diff = float("inf")
+        for f in fotos:
+            diff = abs((f["fecha"]-fecha_v).total_seconds())/60
+            if diff < mejor_diff:
+                mejor_diff = diff; foto_rel = f
+
+        if foto_rel and mejor_diff <= 120:
+            # Opción A: QR junto a foto existente
+            qr_map[foto_rel["nombre"]] = QR_URL_PRUEBA
+            log(f"  ✓ {v['nombre']} → QR junto a '{foto_rel['nombre']}' ({int(mejor_diff)}min)", "🔗")
+        else:
+            # Opción B: extraer fotograma y añadirlo como foto
+            frame = extraer_fotograma(v["ruta"], carpeta_temp)
+            if frame:
+                nb = os.path.basename(frame)
+                fotos.append({"ruta":frame,"fecha":fecha_v,"nombre":nb,"fuente_fecha":"video","es_frame_video":True})
+                qr_map[nb] = QR_URL_PRUEBA
+                log(f"  ✓ {v['nombre']} → fotograma añadido como foto con QR", "🎬")
+
+    fotos.sort(key=lambda x: x["fecha"])
+    return qr_map
+
+# ═══════════════════════════════════════════════════════
+#  MAIN
+# ═══════════════════════════════════════════════════════
+
+def main():
+    """
+    Entrada principal para Railway.
+    Recibe los datos del backend FastAPI via argumentos JSON.
+    
+    Uso desde main.py (FastAPI):
+        from bookeo_crear_libro import crear_libro
+        ruta_pdf = crear_libro(
+            fotos_rutas=[...],
+            videos_rutas=[...],
+            titulo="Mi álbum",
+            nombre_cliente="Ana",
+            qr_urls={"video1.mp4": "https://drive.google.com/..."},
+            carpeta_sal="/tmp/bookeo/pedido_123",
+            carpeta_temp="/tmp/bookeo/pedido_123/temp"
+        )
+    """
+    # Recibir datos por stdin JSON si se llama directamente
+    if len(sys.argv) > 1:
+        with open(sys.argv[1]) as f:
+            datos = json.load(f)
+        ruta = crear_libro(
+            fotos_rutas   = datos["fotos_rutas"],
+            videos_rutas  = datos.get("videos_rutas", []),
+            titulo        = datos["titulo"],
+            nombre_cliente= datos["nombre_cliente"],
+            qr_urls       = datos.get("qr_urls", {}),
+            carpeta_sal   = datos["carpeta_sal"],
+            carpeta_temp  = datos.get("carpeta_temp", datos["carpeta_sal"] + "/temp")
+        )
+        print(json.dumps({"pdf": ruta, "ok": True}))
+    else:
+        print("Uso: python3 bookeo_crear_libro.py datos.json")
+        print("O importar: from bookeo_crear_libro import crear_libro")
+
+if __name__ == "__main__":
+    main()
