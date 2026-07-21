@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookeo · Libro de fotos de bebé con vídeos QR</title>
+<meta name="description" content="El primer año de tu bebé pasa en un segundo. Crea un libro de fotos con vídeos QR que lo revive para siempre. IA organiza por meses. Tapa dura.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#7db898;--green-dark:#5a9a7a;--green-light:#e8f3ee;--green-pale:#f4faf7;
+  --charcoal:#3a3a3a;--charcoal-light:#5a5a5a;
+  --yellow:#f0d060;--red:#e05040;--blue:#4070c0;
+  --cream:#fdfcf8;--cream-dark:#f5f2ea;
+  --shadow:0 20px 60px rgba(0,0,0,.1);--shadow-sm:0 4px 20px rgba(0,0,0,.08);
+  --max-w:1140px;--px:clamp(20px,5vw,80px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--charcoal);overflow-x:hidden}
+img{display:block;max-width:100%}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.container{width:100%;max-width:var(--max-w);margin:0 auto;padding:0 var(--px)}
+.reveal{opacity:1;transform:none;transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:none}
+.section-label{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green-dark);margin-bottom:12px}
+.section-title{font-family:'Lora',serif;font-size:clamp(1.8rem,3vw,2.6rem);line-height:1.25;color:var(--charcoal);margin-bottom:12px}
+.section-sub{color:var(--charcoal-light);font-size:1rem;max-width:520px;line-height:1.65;margin-bottom:56px}
+.ta-center{text-align:center}
+.ta-center .section-sub{margin-left:auto;margin-right:auto}
+.btn-primary{background:var(--green);color:white;padding:14px 30px;border-radius:50px;font-size:.92rem;font-weight:700;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(125,184,152,.35);border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif}
+.btn-primary:hover{background:var(--green-dark);transform:translateY(-2px);box-shadow:0 8px 30px rgba(125,184,152,.45)}
+.btn-ghost{background:rgba(255,255,255,.15);color:white;padding:14px 26px;border-radius:50px;font-size:.92rem;font-weight:600;border:1.5px solid rgba(255,255,255,.4);transition:all .25s;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;backdrop-filter:blur(8px)}
+.btn-ghost:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.7)}
+.btn-outline{background:transparent;color:var(--charcoal);padding:14px 26px;border-radius:50px;font-size:.92rem;font-weight:600;border:1.5px solid #ddd;transition:all .25s;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;text-decoration:none}
+.btn-outline:hover{border-color:var(--green);color:var(--green-dark)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(253,252,248,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(125,184,152,.18);height:68px;display:flex;align-items:center;padding:0 var(--px);justify-content:space-between;transition:box-shadow .3s}
+nav.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.08)}
+.nav-logo{text-decoration:none;display:flex;align-items:center}
+.nav-logo-img{height:48px;width:auto;display:block}
+.nav-links{display:none}
+.nav-cta{background:var(--green);color:white;padding:9px 20px;border-radius:50px;font-size:.84rem;font-weight:600;text-decoration:none;transition:all .25s;white-space:nowrap}
+.nav-cta:hover{background:var(--green-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(125,184,152,.4)}
+
+/* HERO CARRUSEL */
+.hero-carousel{position:relative;height:clamp(480px,80vh,600px);min-height:480px;overflow:hidden}
+.carousel-track{display:flex;height:100%;width:800%}
+.carousel-track.animating{transition:transform .9s cubic-bezier(.77,0,.18,1)}
+.carousel-slide{flex:0 0 12.5%;height:100%;position:relative}
+.carousel-slide img{width:100%;height:100%;object-fit:cover}
+.slide-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.2) 0%,rgba(0,0,0,.5) 55%,rgba(0,0,0,.78) 100%)}
+.carousel-content{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 var(--px);z-index:2;padding-bottom:100px}
+.carousel-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(125,184,152,.22);border:1px solid rgba(125,184,152,.45);color:#b8e0cb;border-radius:50px;padding:6px 18px;font-size:.76rem;font-weight:600;margin-bottom:22px;animation:fadeUp .6s ease both;backdrop-filter:blur(6px)}
+.carousel-badge::before{content:'✦';font-size:.68rem}
+.carousel-content h1{font-family:'Lora',serif;font-size:clamp(2.2rem,5vw,3.8rem);line-height:1.14;color:white;margin-bottom:18px;animation:fadeUp .6s .1s ease both;text-shadow:0 2px 18px rgba(0,0,0,.28)}
+.carousel-content h1 em{font-style:italic;color:#b8e0cb}
+.carousel-content p{font-size:1.05rem;color:rgba(255,255,255,.8);max-width:540px;line-height:1.7;margin-bottom:34px;animation:fadeUp .6s .2s ease both}
+.carousel-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s .3s ease both}
+.carousel-dots{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3}
+.carousel-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.38);cursor:pointer;transition:all .3s;border:none;padding:0}
+.carousel-dot.active{background:var(--green);transform:scale(1.35)}
+
+.hero-trustbar{position:absolute;bottom:0;left:0;right:0;z-index:3;background:rgba(0,0,0,.48);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.08);padding:14px var(--px);display:flex;align-items:center;justify-content:center;gap:clamp(16px,4vw,50px);flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.72);font-size:.82rem}
+.trust-item strong{color:white}
+
+/* EMOTIONAL COPY */
+.emotional-copy{padding:88px var(--px);background:var(--cream-dark)}
+.emotional-copy-inner{max-width:760px;margin:0 auto;text-align:center}
+.emotional-copy h2{font-family:'Lora',serif;font-size:clamp(1.85rem,3.2vw,2.7rem);line-height:1.24;color:var(--charcoal);margin-bottom:26px}
+.emotional-copy h2 em{font-style:italic;color:var(--green-dark)}
+.emotional-copy p{font-size:1.03rem;color:var(--charcoal-light);line-height:1.84;margin-bottom:18px;max-width:630px;margin-left:auto;margin-right:auto}
+.emotional-copy p strong{color:var(--charcoal)}
+.quote-highlight{font-family:'Lora',serif;font-style:italic;font-size:1.2rem;color:var(--green-dark);border-left:3px solid var(--green);padding-left:22px;text-align:left;margin:34px auto;max-width:550px;line-height:1.6}
+
+/* MOMENTOS GALERÍA */
+.momentos{padding:0 var(--px) 88px;background:var(--cream-dark)}
+.momentos-label{text-align:center;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green-dark);margin-bottom:32px}
+.momentos-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:220px 220px;gap:12px;max-width:var(--max-w);margin:0 auto}
+.momento-card{border-radius:16px;overflow:hidden;position:relative;cursor:pointer;transition:transform .32s}
+.momento-card:hover{transform:scale(1.025)}
+.momento-card:nth-child(1){grid-column:1/3}
+.momento-card:nth-child(5){grid-column:3/5}
+.momento-card img{width:100%;height:100%;object-fit:cover}
+.momento-overlay{position:absolute;inset:0;background:linear-gradient(transparent 38%,rgba(0,0,0,.62))}
+.momento-label{position:absolute;bottom:13px;left:13px;background:rgba(255,255,255,.17);backdrop-filter:blur(8px);color:white;border-radius:50px;padding:4px 12px;font-size:.7rem;font-weight:600}
+.momento-icon{position:absolute;top:13px;right:13px;font-size:1.35rem}
+
+/* CÓMO FUNCIONA */
+.como-funciona{padding:88px var(--px);background:var(--cream)}
+.steps-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;max-width:860px;margin:0 auto;position:relative}
+.step{background:white;border-radius:20px;padding:28px 24px;box-shadow:var(--shadow-sm);position:relative;text-align:center}
+.step-icon{width:56px;height:56px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.5rem;position:relative}
+.step-num{position:absolute;top:-6px;right:-6px;background:var(--green);color:white;width:20px;height:20px;border-radius:50%;font-size:.65rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step h3{font-size:1rem;margin-bottom:10px;color:var(--charcoal)}
+.step p{font-size:.86rem;color:var(--charcoal-light);line-height:1.6}
+.steps-cta{display:flex;gap:14px;justify-content:center;margin-top:44px;flex-wrap:wrap}
+
+/* MID PHOTO */
+.mid-photo{position:relative;height:420px;overflow:hidden}
+.mid-photo img{width:100%;height:100%;object-fit:cover}
+.mid-photo-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,.68) 0%,rgba(0,0,0,.32) 100%);display:flex;align-items:center;padding:0 var(--px)}
+.mid-photo-text{max-width:480px}
+.mid-photo-text h2{font-family:'Lora',serif;font-size:clamp(1.7rem,3vw,2.4rem);color:white;line-height:1.2;margin-bottom:14px}
+.mid-photo-text h2 em{font-style:italic;color:#b8e0cb}
+.mid-photo-text p{color:rgba(255,255,255,.78);font-size:.95rem;line-height:1.65;margin-bottom:24px}
+
+/* MICROCLIPS */
+.microclips{padding:88px var(--px);background:var(--cream-dark)}
+.microclips-inner{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;max-width:var(--max-w);margin:0 auto}
+.microclips-content .section-title{margin-bottom:16px}
+.microclips-content p{font-size:.95rem;color:var(--charcoal-light);line-height:1.72;margin-bottom:14px}
+.mc-checklist{list-style:none;margin:20px 0 28px}
+.mc-checklist li{padding:8px 0;border-bottom:1px solid rgba(125,184,152,.18);font-size:.9rem;color:var(--charcoal);display:flex;align-items:flex-start;gap:10px}
+.mc-checklist li::before{content:'✓';color:var(--green);font-weight:800;flex-shrink:0;margin-top:1px}
+.microclips-photo{position:relative;border-radius:22px;overflow:hidden;box-shadow:var(--shadow)}
+.microclips-photo img{width:100%;height:380px;object-fit:cover}
+.microclips-photo-overlay{position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.7))}
+.microclips-photo-caption{position:absolute;bottom:0;left:0;right:0;padding:24px}
+.mc-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(125,184,152,.25);border:1px solid rgba(125,184,152,.5);color:#b8e0cb;border-radius:50px;padding:4px 12px;font-size:.7rem;font-weight:600;margin-bottom:10px}
+.microclips-photo-caption h4{color:white;font-size:.95rem;line-height:1.4;margin-bottom:6px}
+.microclips-photo-caption p{color:rgba(255,255,255,.65);font-size:.8rem;line-height:1.5}
+
+/* QR FEATURE */
+.qr-feature{padding:88px var(--px);background:var(--cream)}
+.qr-inner{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;max-width:var(--max-w);margin:0 auto}
+.qr-visual{position:relative}
+.qr-phone{background:var(--charcoal);border-radius:32px;padding:14px;box-shadow:var(--shadow);max-width:240px;margin:0 auto}
+.qr-screen{border-radius:20px;overflow:hidden;position:relative}
+.qr-screen img{width:100%;height:320px;object-fit:cover}
+.phone-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.phone-play-btn{width:52px;height:52px;background:rgba(255,255,255,.92);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.phone-play-btn::after{content:'';border-left:18px solid var(--green-dark);border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:4px}
+.phone-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);padding:10px 12px}
+.phone-bar-prog{height:3px;background:rgba(255,255,255,.25);border-radius:3px;margin-bottom:6px}
+.phone-bar-fill{height:100%;width:38%;background:var(--green);border-radius:3px}
+.phone-bar-txt{color:rgba(255,255,255,.8);font-size:.68rem}
+.qr-corner{position:absolute;bottom:-20px;right:-16px;background:white;border-radius:14px;padding:8px 10px;box-shadow:0 8px 28px rgba(0,0,0,.14);text-align:center;width:110px;max-width:110px;transform:scale(0.75);transform-origin:bottom right;}
+.qr-corner strong{display:block;font-size:.78rem;color:var(--charcoal);margin-top:8px}
+.qr-corner p{font-size:.68rem;color:var(--charcoal-light);line-height:1.4;margin-top:3px}
+.feat-badge{position:absolute;top:18px;left:-18px;background:var(--green);color:white;border-radius:12px;padding:9px 13px;font-size:.7rem;font-weight:700;line-height:1.4;box-shadow:0 4px 14px rgba(125,184,152,.4)}
+.feat-badge span{display:block;font-weight:400;opacity:.85}
+.feat-list{list-style:none;margin:20px 0 28px}
+.feat-list li{padding:9px 0;border-bottom:1px solid rgba(125,184,152,.18);font-size:.9rem;color:var(--charcoal);display:flex;align-items:flex-start;gap:10px}
+.feat-list li::before{content:'✓';color:var(--green);font-weight:800;flex-shrink:0}
+
+/* IA MES A MES */
+.ai-section{padding:88px var(--px);background:var(--cream-dark)}
+.ai-inner{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;max-width:var(--max-w);margin:0 auto}
+.ai-content p{font-size:.95rem;color:var(--charcoal-light);line-height:1.72;margin-bottom:14px}
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(125,184,152,.15)}
+.tl-item:last-child{border-bottom:none}
+.tl-icon{width:38px;height:38px;min-width:38px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.tl-body{}
+.tl-label{font-size:.82rem;font-weight:700;color:var(--charcoal);margin-bottom:3px}
+.tl-text{font-size:.8rem;color:var(--charcoal-light);line-height:1.5}
+
+/* MID PHOTO 2 */
+.mid-photo-2{position:relative;height:360px;overflow:hidden}
+.mid-photo-2 img{width:100%;height:100%;object-fit:cover}
+.mid-photo-2-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.28) 0%,rgba(0,0,0,.7) 100%);display:flex;justify-content:center;align-items:flex-end;padding-bottom:32px}
+.mid-photo-2-text{max-width:520px;text-align:center}
+.mid-photo-2-text h2{font-family:'Lora',serif;font-size:clamp(1.6rem,2.8vw,2.2rem);color:white;line-height:1.2;margin-bottom:10px}
+.mid-photo-2-text h2 em{font-style:italic;color:#b8e0cb}
+.mid-photo-2-text p{color:rgba(255,255,255,.75);font-size:.9rem;margin-bottom:18px}
+
+/* PRICING */
+.pricing{padding:88px var(--px);background:var(--cream)}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:940px;margin:0 auto}
+.pricing-card{background:white;border-radius:20px;padding:30px 26px;position:relative;border:2px solid transparent;transition:all .28s;box-shadow:var(--shadow-sm);text-align:center}
+.pricing-card:hover{border-color:var(--green);transform:translateY(-4px)}
+.pricing-card.feat{border-color:var(--green);background:var(--charcoal);color:white}
+.pricing-card.feat:hover{transform:translateY(-6px)}
+.price-popular{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--green);color:white;border-radius:50px;padding:4px 14px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.price-size{font-size:.73rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green-dark);margin-bottom:6px}
+.pricing-card.feat .price-size{color:var(--green)}
+.price-name{font-family:'Lora',serif;font-size:1.2rem;margin-bottom:8px;color:var(--charcoal)}
+.pricing-card.feat .price-name{color:white}
+.price-desc{font-size:.8rem;color:var(--charcoal-light);line-height:1.55;margin-bottom:18px}
+.pricing-card.feat .price-desc{color:rgba(255,255,255,.58)}
+.price-cur{font-size:1.1rem;font-weight:700;vertical-align:top;margin-top:6px;display:inline-block}
+.price-amount{font-size:2.8rem;font-weight:800;line-height:1;color:var(--charcoal)}
+.pricing-card.feat .price-amount{color:white}
+.price-pages{font-size:.75rem;color:var(--charcoal-light);margin:6px 0 18px}
+.pricing-card.feat .price-pages{color:rgba(255,255,255,.52)}
+.page-adder{background:var(--green-pale);border-radius:12px;padding:12px;margin-bottom:14px}
+.pricing-card.feat .page-adder{background:rgba(255,255,255,.08)}
+.page-adder-lbl{font-size:.7rem;color:var(--charcoal-light);margin-bottom:8px;text-align:center}
+.pricing-card.feat .page-adder-lbl{color:rgba(255,255,255,.48)}
+.page-adder-row{display:flex;align-items:center;justify-content:center;gap:8px}
+.page-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--green);background:transparent;color:var(--green-dark);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;transition:all .2s}
+.pricing-card.feat .page-btn{border-color:rgba(255,255,255,.38);color:white}
+.page-btn:hover{background:var(--green);color:white;border-color:var(--green)}
+.page-count{font-size:.78rem;color:var(--charcoal);min-width:100px;text-align:center;font-weight:600}
+.pricing-card.feat .page-count{color:white}
+.page-xprice{font-size:.7rem;color:var(--green-dark);font-weight:600}
+.pricing-card.feat .page-xprice{color:var(--green)}
+.price-total{display:flex;justify-content:space-between;align-items:center;margin:12px 0;padding-top:12px;border-top:1px solid rgba(125,184,152,.2);font-size:.82rem;color:var(--charcoal-light)}
+.pricing-card.feat .price-total{color:rgba(255,255,255,.58)}
+.price-total-amt{font-size:1.1rem;font-weight:800;color:var(--green-dark)}
+.pricing-card.feat .price-total-amt{color:white}
+.price-feats{list-style:none;margin:14px 0 22px;text-align:left}
+.price-feats li{font-size:.8rem;color:var(--charcoal-light);padding:5px 0;display:flex;align-items:flex-start;gap:7px;border-bottom:1px solid rgba(125,184,152,.1)}
+.price-feats li::before{content:'✓';color:var(--green);font-weight:800;flex-shrink:0}
+.pricing-card.feat .price-feats li{color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.1)}
+.price-cta{display:block;padding:12px;border-radius:50px;font-size:.88rem;font-weight:700;text-align:center;text-decoration:none;transition:all .25s;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;border:none}
+.price-cta-fill{background:var(--green);color:white;box-shadow:0 4px 16px rgba(125,184,152,.4)}
+.price-cta-fill:hover{background:var(--green-dark);transform:translateY(-1px)}
+.price-cta-outline{background:transparent;color:var(--charcoal);border:1.5px solid #ddd}
+.price-cta-outline:hover{border-color:var(--green);color:var(--green-dark)}
+.pricing-note{text-align:center;font-size:.82rem;color:var(--charcoal-light);margin-top:28px;line-height:1.6}
+
+/* ORIENTATION */
+.orientation-toggle{margin:12px 0}
+.ori-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:6px}
+.ori-btns{display:flex;gap:6px;margin-bottom:6px}
+.ori-btn{flex:1;padding:7px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s;border:none}
+.ori-btn.active{background:var(--green);color:white}
+.ori-btn.inactive{background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.2)}
+.ori-note{font-size:.7rem;color:rgba(255,255,255,.55);text-align:center}
+
+/* TESTIMONIALS */
+
+
+
+
+
+
+
+
+
+
+/* FINAL CTA */
+.final-cta{position:relative;overflow:hidden;min-height:400px;display:flex;align-items:center;justify-content:center}
+.final-cta-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.final-cta-content{position:relative;z-index:2;text-align:center;padding:80px var(--px);background:rgba(0,0,0,.52)}
+.final-cta-content h2{font-family:'Lora',serif;font-size:clamp(1.9rem,3.5vw,2.9rem);color:white;line-height:1.2;margin-bottom:14px}
+.final-cta-content h2 em{font-style:italic;color:#b8e0cb}
+.final-cta-content p{color:rgba(255,255,255,.75);font-size:1rem;margin-bottom:28px}
+.color-strips{display:flex;justify-content:center;gap:8px;margin-top:22px}
+.strip{height:4px;width:48px;border-radius:4px}
+.strip-y{background:var(--yellow)}.strip-r{background:var(--red)}.strip-b{background:var(--blue)}
+
+/* FOOTER */
+footer{background:var(--charcoal);padding:36px var(--px);text-align:center}
+footer p{color:rgba(255,255,255,.45);font-size:.8rem;margin:10px 0}
+.footer-logo-img{height:44px;width:auto;margin:0 auto 12px}
+.footer-links{list-style:none;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center}
+.footer-links a{color:rgba(255,255,255,.45);font-size:.78rem;text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--green)}
+.footer-sep{color:rgba(255,255,255,.2)}
+
+/* MODAL CÓMO FUNCIONA */
+.modal-overlay{position:fixed;inset:0;background:rgba(28,38,33,.62);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:white;border-radius:22px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 28px 80px rgba(0,0,0,.22)}
+.modal-head{background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%);padding:26px 28px 20px;border-radius:22px 22px 0 0;position:relative}
+.modal-head h2{font-family:'Lora',serif;color:white;font-size:1.35rem;margin-bottom:3px}
+.modal-head p{color:rgba(255,255,255,.73);font-size:.8rem}
+.modal-close{position:absolute;top:18px;right:18px;background:rgba(255,255,255,.2);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.modal-close:hover{background:rgba(255,255,255,.34)}
+.modal-body{padding:26px 28px 28px}
+.modal-steps{display:flex;flex-direction:column;gap:18px;margin-bottom:26px}
+.modal-step{display:flex;gap:14px;align-items:flex-start}
+.modal-step-ico{width:42px;height:42px;background:var(--green-light);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
+.modal-step-body h4{font-size:.92rem;margin-bottom:3px}
+.modal-step-body p{font-size:.8rem;color:var(--charcoal-light);line-height:1.54}
+.modal-drive{background:var(--green-pale);border-radius:13px;padding:16px;margin-bottom:22px}
+.modal-drive-title{display:flex;align-items:center;gap:7px;font-size:.86rem;font-weight:600;margin-bottom:7px}
+.modal-drive-desc{font-size:.8rem;color:var(--charcoal-light);line-height:1.54;margin-bottom:9px}
+.modal-drive-note{font-size:.72rem;color:var(--charcoal-light);background:white;border-radius:8px;padding:9px 11px;line-height:1.5}
+.modal-cta{width:100%;padding:14px;background:var(--green);color:white;border:none;border-radius:50px;font-size:.92rem;font-weight:700;cursor:pointer;transition:all .25s;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 4px 18px rgba(125,184,152,.33)}
+.modal-cta:hover{background:var(--green-dark);transform:translateY(-1px)}
+.modal-tutorial{width:100%;padding:12px;background:transparent;color:var(--charcoal-light);border:1.5px solid #ddd;border-radius:50px;font-size:.86rem;font-weight:600;cursor:pointer;transition:all .25s;font-family:'Plus Jakarta Sans',sans-serif;margin-top:9px;display:flex;align-items:center;justify-content:center;gap:7px}
+.modal-tutorial:hover{border-color:var(--green);color:var(--green-dark)}
+.tutorial-ico{width:26px;height:26px;background:var(--green-light);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;color:var(--green-dark);flex-shrink:0}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:900px){
+  .destinos-grid{grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,180px)}
+  .destino-card:nth-child(1){grid-column:auto}
+  .destino-card:nth-child(5){grid-column:auto}
+  .microclips-inner{grid-template-columns:1fr;gap:40px}
+  .microclips-photo img{height:260px}
+  .qr-inner{grid-template-columns:1fr;gap:44px}
+  .ai-inner{grid-template-columns:1fr;gap:40px}
+  .pricing-grid{grid-template-columns:1fr;max-width:420px}
+  
+  .steps-wrap{grid-template-columns:1fr;gap:20px}
+  .steps-wrap::before{display:none}
+}
+.modal-skip{text-align:center;margin-top:12px;font-size:.78rem;color:var(--charcoal-light)}
+.modal-skip a{color:var(--green-dark);cursor:pointer;text-decoration:underline}
+
+/* MODAL CONTACTO */
+.contact-overlay{position:fixed;inset:0;background:rgba(26,26,46,.75);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.contact-overlay.show{opacity:1;pointer-events:all}
+.contact-modal{background:#fff;border-radius:22px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.22);transform:translateY(24px) scale(.97);transition:transform .35s cubic-bezier(.175,.885,.32,1.1)}
+.contact-overlay.show .contact-modal{transform:none}
+.contact-modal-header{background:var(--green,#7db898);padding:24px 28px 20px;position:relative}
+.contact-modal-header h3{font-family:'Lora',serif;color:#fff;font-size:1.25rem;margin-bottom:4px}
+.contact-modal-header p{color:rgba(255,255,255,.75);font-size:.82rem}
+.contact-close{position:absolute;top:16px;right:18px;background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.contact-close:hover{background:rgba(255,255,255,.32)}
+.contact-modal-body{padding:24px 28px 28px}
+.contact-field{margin-bottom:16px}
+.contact-field label{display:block;font-size:.78rem;font-weight:700;color:#3a3a3a;margin-bottom:6px}
+.contact-input{width:100%;padding:11px 14px;border:1.5px solid #e2dfd8;border-radius:10px;font-size:.88rem;font-family:inherit;color:#3a3a3a;background:#faf8f3;outline:none;transition:border-color .2s;box-sizing:border-box}
+.contact-input:focus{border-color:var(--green,#7db898)}
+.contact-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7a8a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.contact-textarea{resize:vertical;min-height:110px}
+.contact-btn{width:100%;padding:13px;background:var(--green,#7db898);color:#fff;border:none;border-radius:50px;font-size:.92rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;margin-top:4px}
+.contact-btn:hover{background:#5a9a7a;transform:translateY(-1px)}
+.contact-sent{display:none;text-align:center;padding:20px 0}
+.contact-sent .sent-icon{font-size:2.5rem;margin-bottom:12px}
+.contact-sent p{color:#3a3a3a;font-size:.9rem;line-height:1.6}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .momentos-grid{grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,180px)}
+  .momentos-grid .momento-card:nth-child(1){grid-column:auto}
+  .momentos-grid .momento-card:nth-child(5){grid-column:auto}
+  .steps-wrap{grid-template-columns:1fr;gap:16px}
+  .microclips-inner,.qr-inner,.ai-inner{grid-template-columns:1fr;gap:40px}
+  .pricing-grid{grid-template-columns:1fr;max-width:400px}
+  
+  .mid-photo,.mid-photo-2{height:300px}
+  .mid-photo-overlay{background:linear-gradient(to bottom,rgba(0,0,0,.32) 0%,rgba(0,0,0,.72) 100%);align-items:flex-end;padding-bottom:32px}
+  .mid-photo-text{max-width:100%;text-align:center}
+  .mid-photo-text .btn-primary{margin:0 auto}
+  .steps-cta{flex-direction:column;align-items:center}
+  .modal-header,.modal-body{padding:22px 20px}
+  .contact-modal-header,.contact-modal-body{padding:20px 18px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="/" class="nav-logo"><img src="data:image/png;base64,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" alt="Bookeo" class="nav-logo-img"></a>
+  <a href="#precios" onclick="scrollToPrecios(event)" class="nav-cta">✦ Crea tu libro</a>
+</nav>
+
+<!-- HERO CARRUSEL -->
+<section class="hero-carousel">
+  <div class="carousel-track" id="carouselTrack">
+    <!-- ⚠️ IMAGEN 1 CARRUSEL: guarda "carrusel-bebe-1.jpg" (1400x520px) junto al HTML -->
+    <!-- Esta es la primera imagen · la pones tú · las demás pueden seguir siendo de Unsplash -->
+    <div class="carousel-slide active"><img src="carrusel-bebe-1.jpg" onerror="this.src='https://images.unsplash.com/photo-1519689680058-324335c77eba?w=1600&q=85&fit=crop&crop=faces'" alt="Bebé sonriendo"><div class="slide-overlay"></div></div>
+    <!-- ⚠️ IMAGEN 2 CARRUSEL: guarda "carrusel-bebe-2.jpg" o deja Unsplash -->
+    <div class="carousel-slide"><img src="durmiendo.jpg" alt="Bebé durmiendo"><div class="slide-overlay"></div></div>
+    <!-- ⚠️ IMAGEN 3 CARRUSEL: guarda "carrusel-bebe-3.jpg" o deja Unsplash -->
+    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1600&q=85&fit=crop" alt="Bebé primeros pasos"><div class="slide-overlay"></div></div>
+    <!-- ⚠️ IMAGEN 4 CARRUSEL: guarda "carrusel-bebe-4.jpg" o deja Unsplash -->
+    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=1600&q=85&fit=crop" alt="Familia con bebé"><div class="slide-overlay"></div></div>
+    <!-- Duplicados para loop infinito -->
+    <div class="carousel-slide"><img src="carrusel-bebe-1.jpg" onerror="this.src='https://images.unsplash.com/photo-1519689680058-324335c77eba?w=1600&q=85&fit=crop&crop=faces'" alt="Bebé"><div class="slide-overlay"></div></div>
+    <div class="carousel-slide"><img src="durmiendo.jpg" alt="Bebé durmiendo"><div class="slide-overlay"></div></div>
+    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1600&q=85&fit=crop" alt="Primeros pasos"><div class="slide-overlay"></div></div>
+    <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=1600&q=85&fit=crop" alt="Familia"><div class="slide-overlay"></div></div>
+  </div>
+
+  <div class="carousel-content">
+    <div class="carousel-badge">Libro de fotos · Bebés y primer año</div>
+    <h1>El primer año pasa en<br>un segundo. <em>No lo dejes ir.</em></h1>
+    <p>Un libro de tapa dura que guarda cada mes en orden, con los vídeos de esos momentos enlazados por QR. Para que ese año tan especial no se quede solo en el móvil.</p>
+    <div class="carousel-actions">
+      <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Crear mi libro de bebé</a>
+      <button class="btn-ghost" onclick="abrirModal()">¿Cómo funciona? →</button>
+    </div>
+  </div>
+
+  <div class="carousel-dots" id="carouselDots">
+    <button class="carousel-dot active" onclick="goToSlide(0)"></button>
+    <button class="carousel-dot" onclick="goToSlide(1)"></button>
+    <button class="carousel-dot" onclick="goToSlide(2)"></button>
+    <button class="carousel-dot" onclick="goToSlide(3)"></button>
+  </div>
+  <div class="hero-trustbar">
+    <div class="trust-item"><span>🎬</span><div><strong>Vídeos QR</strong> incluidos gratis</div></div>
+    <div class="trust-item"><span>🤖</span><div><strong>IA organiza</strong> por meses automáticamente</div></div>
+    <div class="trust-item"><span>📦</span><div><strong>Envío</strong> en 5–7 días</div></div>
+  </div>
+</section>
+
+<!-- EMOTIONAL COPY -->
+<section class="emotional-copy">
+  <div class="emotional-copy-inner reveal">
+    <h2>Hay momentos que creías<br>que nunca ibas a <em>olvidar.</em></h2>
+    <p>La primera vez que te miró a los ojos. Esa risa que no esperabas y que te rompió por dentro. Los meses pasan y las fotos se quedan enterradas en el móvil, esperando un día que no llega nunca.</p>
+    <div class="quote-highlight">"En Bookeo, cada foto va acompañada del vídeo que grabaste justo en ese momento. Un QR discreto en la página y de repente vuelve a sonar su voz. Vuelve a moverse. Vuelve a ser ese día."</div>
+    <p>No es un álbum. <strong>Es una máquina del tiempo.</strong></p>
+    <p>Dentro de veinte años tu hijo va a abrir ese libro, va a ver las fotos, y luego va a apuntar el móvil a ese pequeño código en la esquina. Y vas a volver a aparecer tú, riéndote, en ese día que creías que nunca ibas a olvidar.</p>
+  </div>
+</section>
+
+<!-- MOMENTOS GALERÍA -->
+<section class="momentos">
+  <div class="momentos-label">Momentos que merecen un libro</div>
+  <div class="momentos-grid">
+    <!-- ⚠️ IMAGEN GALERÍA: puedes sustituir las URLs de Unsplash por fotos reales tuyas -->
+    <div class="momento-card reveal">
+      <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=800&q=85&fit=crop&crop=faces" alt="Primera sonrisa bebé">
+      <div class="momento-overlay"></div><div class="momento-label">Primer verano</div><div class="momento-icon">😎</div>
+    </div>
+    <div class="momento-card reveal" style="transition-delay:.07s">
+      <img src="durmiendo.jpg" alt="Bebé durmiendo">
+      <div class="momento-overlay"></div><div class="momento-label">Primer sueño en casa</div><div class="momento-icon">🌙</div>
+    </div>
+    <div class="momento-card reveal" style="transition-delay:.11s">
+      <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&q=85&fit=crop" alt="Primeros pasos">
+      <div class="momento-overlay"></div><div class="momento-label">Momentos divertidos</div><div class="momento-icon">😄</div>
+    </div>
+    <div class="momento-card reveal" style="transition-delay:.15s">
+      <img src="https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=400&q=85&fit=crop" alt="Familia con bebé">
+      <div class="momento-overlay"></div><div class="momento-label">Familia completa</div><div class="momento-icon">❤️</div>
+    </div>
+    <div class="momento-card reveal" style="transition-delay:.19s">
+      <img src="cumple1.jpg" alt="Primer cumpleaños">
+      <div class="momento-overlay"></div><div class="momento-label">Primer cumpleaños</div><div class="momento-icon">🎂</div>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section class="como-funciona" id="como-funciona">
+  <div class="container ta-center">
+    <div class="section-label">Proceso</div>
+    <h2 class="section-title">Tres pasos y el primer año<br>de tu bebé tiene libro para siempre</h2>
+    <p class="section-sub">Sin descargas ni complicaciones. La IA organiza todo mes a mes automáticamente.</p>
+  </div>
+  <div class="steps-wrap">
+    <div class="step reveal">
+      <div class="step-icon"><span>📷</span><div class="step-num">1</div></div>
+      <h3>Sube fotos y vídeos</h3>
+      <p>Todo de una vez desde tu galería. El sistema separa fotos de vídeos y los ordena por fecha y mes de vida automáticamente.</p>
+    </div>
+    <div class="step reveal" style="transition-delay:.14s">
+      <div class="step-icon"><span>✨</span><div class="step-num">2</div></div>
+      <h3>La IA diseña el libro</h3>
+      <p>Organiza el primer año mes a mes, sin mezclar nunca momentos de meses distintos. Coloca los QR y genera el libro en ~4 minutos.</p>
+    </div>
+    <div class="step reveal" style="transition-delay:.28s">
+      <div class="step-icon"><span>📦</span><div class="step-num">3</div></div>
+      <h3>Aprueba y recíbelo</h3>
+      <p>Revisa tu libro en el visor interactivo, edita lo que quieras y confirma. Tapa dura y entrega en 5–7 días hábiles.</p>
+    </div>
+  </div>
+  <div class="steps-cta reveal">
+    <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Crear mi libro de bebé</a>
+    <button class="btn-outline" onclick="scrollToPrecios()">Ver precios →</button>
+  </div>
+</section>
+
+<!-- MID PHOTO 1 -->
+<!-- ⚠️ IMAGEN MID: guarda "bebe-mid-1.jpg" (1600px ancho) o deja Unsplash -->
+<div class="mid-photo reveal">
+  <img src="https://images.unsplash.com/photo-1492725764893-90b379c2b6e7?w=1600&q=85&fit=crop" alt="Madre con bebé">
+  <div class="mid-photo-overlay">
+    <div class="mid-photo-text">
+      <h2>El primer abrazo.<br><em>Para siempre en una página.</em></h2>
+      <p>Cada mes tiene su capítulo. La IA nunca mezcla momentos de meses distintos para que el libro cuente la historia exactamente como fue.</p>
+      <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Empezar mi libro</a>
+    </div>
+  </div>
+</div>
+
+<!-- MICROCLIPS -->
+<section class="microclips">
+  <div class="microclips-inner">
+    <div class="microclips-content">
+      <div class="section-label">Novedad · Micro-clips</div>
+      <h2 class="section-title">Todos esos vídeos cortos,<br><em>unidos en uno solo</em></h2>
+      <p>Tienes decenas de vídeos cortos de tu bebé dispersos en el móvil. La risa del martes, los primeros sonidos del jueves, el baño del domingo. Cada uno en su carpeta, ninguno en su sitio.</p>
+      <p>Con Bookeo los seleccionas, los subes junto con las fotos y el sistema los une automáticamente en un único vídeo ordenado. Puedes añadir tu propia música o elegir un género de nuestra biblioteca sin ningún coste adicional.</p>
+      <p>El vídeo unido se descarga en tu dispositivo para que lo revises. Cuando estés conforme, lo subes tú junto con el resto de fotos y vídeos. Queda enlazado al QR del mes que corresponda.</p>
+      <ul class="mc-checklist">
+        <li>Une hasta 5 clips de un mismo mes en un solo vídeo</li>
+        <li>Añade tu música favorita o elige un género de nuestra biblioteca</li>
+        <li>Descarga el vídeo unido y revísalo antes de subirlo</li>
+        <li>Tú decides cuándo y cómo lo incluyes en tu libro</li>
+      </ul>
+      <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Ver formatos y precios</a>
+    </div>
+    <!-- ⚠️ IMAGEN MICROCLIPS: guarda "bebe-clips.jpg" o deja Unsplash -->
+    <div class="microclips-photo reveal">
+      <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&q=85&fit=crop" alt="Bebé momentos">
+      <div class="microclips-photo-overlay"></div>
+      <div class="microclips-photo-caption">
+        <div class="mc-badge">🎬 Micro-clips · Incluido gratis</div>
+        <h4>"Tenía 5 vídeos de 10 segundos del primer mes. Ahora son un único vídeo de 6 minutos en el libro."</h4>
+        <p>El vídeo unido se descarga en tu dispositivo para que lo compruebes antes de subirlo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QR FEATURE -->
+<section class="qr-feature">
+  <div class="qr-inner">
+    <div class="qr-visual reveal">
+      <div style="text-align:center;">
+  <img src="imagen-bebe-centro.png" alt="Bookeo libro con QR" style="width:100%;max-width:420px;border-radius:16px;">
+</div>
+      <div class="qr-corner">
+        <strong>Escanea el QR</strong>
+        <p>y revive ese momento único</p>
+      </div>
+      <div class="feat-badge">Incluido gratis<span>en todos los formatos</span></div>
+    </div>
+    <div class="qr-content reveal" style="transition-delay:.14s">
+      <div class="section-label">QR vídeo · Exclusivo Bookeo</div>
+      <h2>No es un álbum.<br><em>Es una máquina del tiempo.</em></h2>
+      <p>Cada foto del libro lleva un QR discreto que reproduce el vídeo que grabaste en ese mismo instante. Apuntas el móvil y vuelve a sonar su risa. Vuelve a moverse. Vuelve a ser ese mes.</p>
+      <ul class="feat-list">
+        <li>QR colocado automáticamente en la página del mes correcto</li>
+        <li>Color adaptativo: fondo oscuro → QR blanco · fondo claro → QR oscuro</li>
+        <li>Vídeos guardados en tu Google Drive — tuyos para siempre</li>
+        <li>Gratis e incluido en todos los formatos sin excepción</li>
+      </ul>
+      <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Ver formatos y precios</a>
+    </div>
+  </div>
+</section>
+
+<!-- IA MES A MES -->
+<section class="ai-section">
+  <div class="ai-inner">
+    <div class="ai-content reveal">
+      <div class="section-label">Inteligencia artificial</div>
+      <h2 class="section-title">La IA entiende que<br>cada mes es <em>un capítulo único</em></h2>
+      <p>No es una galería aleatoria. Bookeo organiza el primer año como un libro de verdad: mes a mes, en orden, sin mezclar nunca momentos de meses distintos. Cada etapa tiene su espacio.</p>
+    </div>
+    <div class="timeline reveal" style="transition-delay:.16s">
+      <div class="tl-item"><div class="tl-icon">🏥</div><div class="tl-body"><div class="tl-label">Los primeros días</div><div class="tl-text">El hospital, la llegada a casa, los primeros brazos. El inicio de todo.</div></div></div>
+      <div class="tl-item"><div class="tl-icon">📅</div><div class="tl-body"><div class="tl-label">Mes a mes en orden</div><div class="tl-text">Cada mes en su página. La primera sonrisa, los primeros giros, el inicio del gateo. Todo en su lugar.</div></div></div>
+      <div class="tl-item"><div class="tl-icon">⭐</div><div class="tl-body"><div class="tl-label">Momentos destacados</div><div class="tl-text">La IA detecta las mejores fotos por composición y expresión, y les da más espacio automáticamente.</div></div></div>
+      <div class="tl-item"><div class="tl-icon">🎂</div><div class="tl-body"><div class="tl-label">El gran final · Primer cumpleaños</div><div class="tl-text">El cierre perfecto. El primer año completo con principio, desarrollo y un final que lo merece todo.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MID PHOTO 2 -->
+<!-- ⚠️ IMAGEN MID 2: guarda "bebe-mid-2.jpg" o deja Unsplash -->
+<div class="mid-photo-2 reveal">
+  <img src="playa.jpg" alt="Padre con bebé">
+  <div class="mid-photo-2-overlay">
+    <div class="mid-photo-2-text">
+      <h2>Ese momento en que<br><em>el mundo se paró.</em></h2>
+      <p>Ya tienes la foto. Ya tienes el vídeo. Solo falta el libro que los guarde juntos para siempre.</p>
+      <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Crear mi libro</a>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section class="pricing" id="precios">
+  <div class="container ta-center">
+    <div class="section-label">Precios</div>
+    <h2 class="section-title">Elige el formato<br>del libro de tu bebé</h2>
+    <p class="section-sub">Tapa dura · mínimo 30 páginas · vídeos QR incluidos en todos</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="pricing-card reveal">
+      <!-- IMAGEN: guarda "formato-20x20.jpg" (400x300px) junto al HTML -->
+      <div style="height:150px;width:80%;margin:0 auto;border-radius:12px;overflow:hidden;margin-bottom:14px;background:#aca394"><img src="formato-20x20.jpg" alt="Álbum 20x20" style="width:100%;height:100%;object-fit:contain"></div>
+      <div class="price-size">20 × 20 cm</div>
+      <div class="price-name">Cuadrado</div>
+      <div class="price-desc">Compacto y elegante. Perfecto para regalar o poner en la estantería.</div>
+      <div><span class="price-cur">€</span><span class="price-amount" id="price-small">26,90</span></div>
+      <div class="price-pages" id="pages-small">30 páginas · hasta 80 fotos aprox · tapa dura</div>
+      <div class="page-adder">
+        <div class="page-adder-lbl">Páginas extra (packs de 2)</div>
+        <div class="page-adder-row">
+          <button class="page-btn" onclick="changePacks('small',-1)">−</button>
+          <div class="page-count" id="packs-small">0 · +0,00€</div>
+          <button class="page-btn" onclick="changePacks('small',1)">+</button>
+          <span class="page-xprice">+0,50€/pack</span>
+        </div>
+      </div>
+      <div class="price-total"><span>Total</span><span class="price-total-amt" id="total-small">26,90€</span></div>
+      <ul class="price-feats"><li>Tapa dura</li><li>Vídeos QR incluidos</li><li>IA organiza por meses</li><li>Micro-clips incluidos</li><li>Envío 2,90€ (gratis desde 2 libros)</li></ul>
+      <a href="photobookstudio.html" class="price-cta price-cta-outline">Empezar →</a>
+    </div>
+    <div class="pricing-card feat reveal" style="transition-delay:.1s">
+      <div class="price-popular">⭐ Más elegido bebé</div>
+      <!-- IMAGEN: guarda "formato-21x28.jpg" (400x300px) junto al HTML -->
+      <div style="height:150px;width:80%;margin:0 auto;border-radius:12px;overflow:hidden;margin-bottom:14px;background:#aca394"><img src="formato-21x28.jpg" alt="Álbum 20x20" style="width:100%;height:100%;object-fit:contain"></div>
+      <div class="price-size">21 × 28 cm</div>
+      <div class="price-name">Vertical / Horizontal</div>
+      <div class="price-desc">El formato ideal para bebés. Amplio, con espacio para cada momento del primer año.</div>
+      <div class="orientation-toggle">
+        <div class="ori-label">ORIENTACIÓN</div>
+        <div class="ori-btns">
+          <button id="btn-vertical" class="ori-btn active" onclick="setOrientation('vertical')"><span>📱</span> Vertical</button>
+          <button id="btn-horizontal" class="ori-btn inactive" onclick="setOrientation('horizontal')"><span>🖼</span> Horizontal</button>
+        </div>
+        <div class="ori-note" id="ori-note">📱 Vertical · ideal para retratos de bebés</div>
+      </div>
+      <div><span class="price-cur">€</span><span class="price-amount" id="price-medium">32,60</span></div>
+      <div class="price-pages" id="pages-medium">30 páginas · hasta 100 fotos aprox · tapa dura</div>
+      <div class="page-adder">
+        <div class="page-adder-lbl">Páginas extra (packs de 2)</div>
+        <div class="page-adder-row">
+          <button class="page-btn" onclick="changePacks('medium',-1)">−</button>
+          <div class="page-count" id="packs-medium">0 · +0,00€</div>
+          <button class="page-btn" onclick="changePacks('medium',1)">+</button>
+          <span class="page-xprice">+0,60€/pack</span>
+        </div>
+      </div>
+      <div class="price-total"><span>Total</span><span class="price-total-amt" id="total-medium">32,60€</span></div>
+      <ul class="price-feats"><li>Tapa dura</li><li>Vídeos QR incluidos</li><li>IA organiza por meses</li><li>Micro-clips incluidos</li><li>Envío 2,90€ (gratis desde 2 libros)</li></ul>
+      <a href="photobookstudio.html" class="price-cta price-cta-fill">Empezar →</a>
+    </div>
+    <div class="pricing-card reveal" style="transition-delay:.2s">
+      <!-- IMAGEN: guarda "formato-28x28.jpg" (400x300px) junto al HTML -->
+      <div style="height:150px;width:80%;margin:0 auto;border-radius:12px;overflow:hidden;margin-bottom:14px;background:#aca394"><img src="formato-28x28.jpg" alt="Álbum 20x20" style="width:100%;height:100%;object-fit:contain"></div>
+      <div class="price-size">28 × 28 cm</div>
+      <div class="price-name">XL Premium</div>
+      <div class="price-desc">Gran formato para un primer año que merece todo el espacio del mundo.</div>
+      <div><span class="price-cur">€</span><span class="price-amount" id="price-large">46,50</span></div>
+      <div class="price-pages" id="pages-large">30 páginas · hasta 120 fotos aprox · tapa dura</div>
+      <div class="page-adder">
+        <div class="page-adder-lbl">Páginas extra (packs de 2)</div>
+        <div class="page-adder-row">
+          <button class="page-btn" onclick="changePacks('large',-1)">−</button>
+          <div class="page-count" id="packs-large">0 · +0,00€</div>
+          <button class="page-btn" onclick="changePacks('large',1)">+</button>
+          <span class="page-xprice">+0,80€/pack</span>
+        </div>
+      </div>
+      <div class="price-total"><span>Total</span><span class="price-total-amt" id="total-large">46,50€</span></div>
+      <ul class="price-feats"><li>Tapa dura</li><li>Vídeos QR incluidos</li><li>IA organiza por meses</li><li>Micro-clips incluidos</li><li>Envío 2,90€ (gratis desde 2 libros)</li></ul>
+      <a href="photobookstudio.html" class="price-cta price-cta-outline">Empezar →</a>
+    </div>
+  </div>
+  <p class="pricing-note reveal">🔒 Visualiza tu libro completo en el visor · edita lo que quieras · confirma cuando esté perfecto</p>
+  <p class="pricing-note reveal" style="margin-top:8px;font-size:.75rem">🚚 Envío 2,90€ · <strong style="color:var(--green-dark)">Gratis comprando 2 libros o más</strong> · Vídeos QR incluidos en todos los formatos</p>
+  <details style="max-width:800px;margin:24px auto 0;cursor:pointer;text-align:left;">
+    <summary style="color:#7db898;font-weight:700;font-size:.9rem;list-style:none;text-align:center;">▼ Características del libro</summary>
+    <div style="background:#faf8f3;border-radius:12px;padding:16px 20px;margin-top:10px;">
+      <ul style="font-size:.85rem;color:#1a1a2e;line-height:2;list-style:none;padding:0;">
+        <li>· Tapa dura laminada mate</li>
+        <li>· Cubierta seda estucada 150-200g/m²</li>
+        <li>· Papel interior 170g/m² certificado FSC</li>
+        <li>· Cartón resistente 3mm</li>
+        <li>· Hasta 200 páginas interiores</li>
+        <li>· Portada y contraportada imprimibles</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<!-- TESTIMONIALS -->
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <!-- ⚠️ IMAGEN FINAL CTA: guarda "bebe-final.jpg" o deja Unsplash -->
+  <img src="https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=1600&q=85&fit=crop" alt="Primer cumpleaños" class="final-cta-img">
+  <div class="final-cta-content">
+    <h2>El primer año es<br><em>único e irrepetible.</em></h2>
+    <p>Visualiza tu libro completo en el visor · edita lo que quieras · confirma cuando esté perfecto</p>
+    <a href="#precios" onclick="scrollToPrecios(event)" class="btn-primary">✦ Crear mi libro de bebé</a>
+    <div class="color-strips"><div class="strip strip-y"></div><div class="strip strip-r"></div><div class="strip strip-b"></div></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <img src="data:image/png;base64,/9j/4QCARXhpZgAATU0AKgAAAAgABAEAAAQAAAABAAAB9AEBAAQAAAABAAAA6wEyAAIAAAAUAAAAPodpAAQAAAABAAAAUgAAAAAyMDI2OjA2OjA0IDAyOjU3OjUyAAABkAMAAgAAABQAAABkAAAAADIwMjU6MDQ6MTkgMTg6MjI6MzYA/+AAEEpGSUYAAQEAAAEAAQAA/+IB2ElDQ19QUk9GSUxFAAEBAAAByAAAAAAEMAAAbW50clJHQiBYWVogB+AAAQABAAAAAAAAYWNzcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAPbWAAEAAAAA0y0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJZGVzYwAAAPAAAAAkclhZWgAAARQAAAAUZ1hZWgAAASgAAAAUYlhZWgAAATwAAAAUd3RwdAAAAVAAAAAUclRSQwAAAWQAAAAoZ1RSQwAAAWQAAAAoYlRSQwAAAWQAAAAoY3BydAAAAYwAAAA8bWx1YwAAAAAAAAABAAAADGVuVVMAAAAIAAAAHABzAFIARwBCWFlaIAAAAAAAAG+iAAA49QAAA5BYWVogAAAAAAAAYpkAALeFAAAY2lhZWiAAAAAAAAAkoAAAD4QAALbPWFlaIAAAAAAAAPbWAAEAAAAA0y1wYXJhAAAAAAAEAAAAAmZmAADypwAADVkAABPQAAAKWwAAAAAAAAAAbWx1YwAAAAAAAAABAAAADGVuVVMAAAAgAAAAHABHAG8AbwBnAGwAZQAgAEkAbgBjAC4AIAAyADAAMQA2/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgA6wH0AwEiAAIRAQMRAf/EAB0AAQACAgMBAQAAAAAAAAAAAAAGCAUHAQQJAwL/xABWEAABAwICBAcICg4JBAMAAAAAAQIDBAUGEQchMUEIEhMYUWGTFFVWcYGRstMiMjU3QlJ1kqHSFRYXI1NUcnOClLGzwdEkNkZiZnSipeEzNGPjQ8Lw/8QAHAEBAAIDAQEBAAAAAAAAAAAAAAQFAgMGAQcI/8QAOBEAAgIBAgQDBQUGBwAAAAAAAAECAxEEIQUSMVETQaEiMnGRsRQVM4HRBgc0UmGSQkNTgpPh8f/aAAwDAQACEQMRAD8A36ACsOCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABre9cIXA+H7vWWyuucsVZSSuhmYlJK5GuauSpmjclPUm+hnCudjxBZNkA1VzndHvfeb9Tm+qOc7o977zfqc31TLkl2Nv2a/wDkfyNqg1VzndHvfeb9Tm+qfeDhKaO53tb9nljVy5ffKOdE8q8TJByS7D7Nd/I/kzZwMJYMb4fxSuVovVDcX5ZrHTztc9E6255p5UM2Y9DQ04vDQAB4eAAAAAAAAAAAAAAAAAAAAAAAw+Mqua34QvlVTyLFUQUE8scjdrXJG5UVPEqHp6llpGYBQn7u2PvCet/0/wAh93bH3hPW/wCn+Rv8F9y4+67f5l6l9gV74LeP8Q40uWII73dZ7iynhhdEk2XsFVzs8sk6kLCGmUeV4ZWXVOibrl1QABiaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAefel/30sV/KU/pqegh596X/AH0sV/KU/pqSKerLvhX4kvgREA/Ucb5pGxxtV73KjWtamaqq7ERCWdKfkGfqNHuKaRM58NXiFP8AyUErf2tMDJG6J7mParHtVUc1yZKi9CnmcmKkpdGcxSvgkbJG90cjVza5q5Ki9KKbi0YcJbEGD6iCkvU0l8s3GRHcs7jVETelj125dDs+hFQ02DxxUtma7KoXR5ZrJ6SWK+0OJbRS3O2VLKuhqWceKVmxU/gqLmioutFRUO8Vj4H+NJVqLtheomV0PE7tpWO+CuaNkRPHmxcupV6SzhBlHleDjtRT4FrgAAYEYAAAAAAAAAAAAAAAAAAGBx9/UTEfybU/unGeMDj7+omI/k2p/dOPV1M4e+viedYALI70sdwM/dbFH5iD0nlpCrfAz91sUfmIPSeWkINvvs5DiH8TL8voAAaiuAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB596X/fSxX8pT+mp6CHn3pf99LFfylP6akinqy74V+JL4ERO/h73ftv+Zi9NDoHfw97v23/ADMXpoSzo5dGekZAtKWiCyaSbPUtmpIobykarTXBjUbI16J7FHKntm57UXyZLrJ6dO8XamsNqrLjWyJDSUsTppXrua1M1K1Np7HCVylCScHuebc0T4JXxSNVkjHK1zV2oqbUPyfauqlrq2oqXJk6aR0ip0Kq5/xPiWR3htPgy1q0mmOzs3VEc8S9k537WoXfKV8FezuuWlqlqkaqst9NNUOXcmbeTTPtPoLqEO73jluJ48dY7fqAAaCpAAAAAAAAAAAAAAAAAABgcff1ExH8m1P7pxnjA4+/qJiP5Nqf3Tj1dTOHvr4nnWACyO9LHcDP3WxR+Yg9J5aQq3wM/dbFH5iD0nlpCDb77OQ4h/Ey/L6AAGorgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAefel/30sV/KU/pqegh596X/AH0sV/KU/pqSKerLvhX4kvgRE+9vq+4K+mqeJx+RlbJxc8s8lRcs/IfAEs6TqWWm4Z8jo1SLCLWP3OfcVcieTkk/aas0k6c8S6TIe5K2SKhtaO43cVGitY9U2K9VVVdl5s9eRrwGChFbpESvSUVPmhHcHLGOke1jGq5zlyRqJmqr0HBtXQpj/BWAq5lZfLDV1l0a/wC917HtlZCnS2JeLxVTpzcvRlsMm8LY32ScIuUVllguDnorl0e4VkrbjEsd6unFkmjcmuGNM+JGvXrVV61y3G2yP4Qx9YMeUjqix3OGua1EV8bc2yR/lMXJU8x+MfY8tejrDk93ukmUbfYRQt9vPIqLkxvWuS+JEVdxAeZPfqcZY7LrXzL2n5GSxBiK24WtU1yu1ZFQ0USZullXJPEibVVdyJrUr1jjhfpHI6nwpa2yoi5d2XJFyX8mNqovlVfIaN0h6Sr1pKvD6261DuRa5e56Ni/eoGruanT0uXWpFSTGpL3i+0/DYQXNbu/Q2Ld+EJj67zOe7EE1K1dkdIxkTW+ZM/OqmG+63jVJuU+2u8cbo7tk4vmzyImDbyrsWipqWyivkbHs/CHx9Zpke2/SVjN8VZGyVrvKqZp5FQ23gXhe09TIynxZbUpFXV3bb0VzE/KjVVcnjRV8RV0GLhF+Ros0dFi3jj4bHpNZ7zQ4gt0NfbauKto5k40c0LuM1f8Anq3HcKAaM9Kl60Y3dlTQTOloXvRamge773Mm/wATstjk1+NNRd3DeP7JifCLcSUtYxlsSN0k0ky8VYOKmb2v6Fbv86alQizrcTnNVo56d7bpkgllZBG+SR7Y42IrnPcuSIibVVTRuP8AhW2HD75qTD8C32sYqt5fPiUzV6nbX+TUu5TTmmzTvX6RK+a3WyaWjw1GvFbEnsXVWXw5N+XQ3dqz1mpDbCrzkWOm4asc13y/U2nfuExj2+OyjucVrj/B0EDW/wCp3Gd9JGp9LuNql6Ofiu7oqLn97rHsTzIqERBvUUvIuI0VR2UV8id0GnTHtuka+LE9a9W7p1bKi+NHouZsnCHC+u9JOyLEdsguFLsdPRJyUydfFVVa7xex8ZXsHjhF+RhPS02LEoo9D8EaQ7DpDty1lkrm1KMySWFycWWJehzV1p49i7lU+uPv6iYj+Tan9048/cPYkueE7rDcrTWS0NbF7WWJdqb0VNiou9F1KW7wrpho9KeinEiSIymvlLa6juulTYv3pycoz+6v0LqXcqxpV8ryuhQ6jQuiSnDeOfkUyABMOoLHcDP3WxR+Yg9J5aQq3wM/dbFH5iD0nlicZYyteA7DUXe71CQ00SZNamt8r9zGJvcv/K5IikKzeZyOuTlqpJddvocYzxna8BWCou92nSGniTJrE1vlfuYxN6r/AMrkiKVbr+F1i6WtnfSUVrp6VXqsUUkL3ua3ciu46Zr15Ia/0oaULppQv7q6tcsNHEqtpKJrs2QM/i5dWbt/UiIiQ03QrSW5b6bQQhHNqy36G6udvjf8BaP1Z/1xzt8b/gLR+rP+uaVLNcHzg+cXubFGKKbXqkobdK3ZvSSRPpRvlXceyUIrLRnfXpdPDmnBG2dEN1xpiKy/ZXFsVHRNqGotLRwQOZIjfjvzcuWe5vn6DEaReEdhfAj5qOnkW93aNVatLSOTiMcm58mxNepUTNU6DXvCJ0+ywVFRhXDNXyaszjr6+F2tF2LEx27L4Sp4tylZTCNfN7TIWn0Kufi2rCfRI3BibhTY2vkipQz09jgz1MpIkc9U63Pz+hEIu/Tfjx8iPXFFejk3I9ETzImRBzN0+BsSVdN3RBh+6zU+WfKx0UjmZdOaNyN3LFeRbqiitY5UiZWnhI6QLVMj1vSVzN8VXBG9q+VER3mU23gPhd0ddIymxXb0t73Ll3bQo58X6TFVXN8iu8SFW6inlpJnwzxPhlYuTo5Gq1yeNFPmeOEX5GFmjotW8cfDY9K7fcKa60UNZRVEdVSzNR8c0Lkcx7V3oqbT7lGdCumeu0Y3lkNRJLU4eqHZVNJnnyef/wAjE3OTem9PIqWi0q6ZbXo6wtBXwvjr66vj49vgaubZUVEVJFX4iZovXnknVFlW08HOX6KyqxQjvnoSXGePLHgC2d3XuuZSRKuUbPbSSr0Namtf2JvyK7Yw4YFxqJ3RYZtUNJTpqSouCcpK7rRrVRrfKrjReKMV3XGd3lud4rZK2rk1cZ66mJua1NjUToQxJvjUl1Lmjh1dazZu/Qntw084+uUrnyYlq4uN8Gn4sSJ4kaiGPi0uY2hkV7cV3hVXc+skcnmVciJA28q7Fiqa1sor5G0LDwk8e2OTN12Zc4vwVfC16fOTJ30m58AcLKzXt8VJiWlWyVTlRqVUSq+mcvX8JnlzTpVCpAMXXF+RHt0VFq3jj4bHpfT1EVXBHNBIyaGRqOZJG5HNci7FRU2ofso/oZ043LRrcYaSrllrcOSOylpFXjLDn8OPPYqbVbsXXv1l1rXdKS926mr6GdlTR1MaSRSsXU5q7FIk4ODOZ1OlnppYe6fmdoAGshgAAAAAAAAAAAAAAAAAA8+9L/vpYr+Up/TU9BDz70v++liv5Sn9NSRT1Zd8K/El8CInLGOke1jGq57lyRrUzVV6Dg7+Hvd+2/5mL00JZ0jeFk732g4nT+zl2/UZfqmOr7LcbVl3bQVVHns7ohcz9qHpMfmWJk8bo5GNkY5Mla5M0VOtCL439DnlxWXnD1PM8FpOEdoMtkViqsVWClZQ1NL7OtpYW8WOVirkr0bsa5M81y1Kma7dtWzfGSksouaL46iHPE71jvtww3dILjbKuWirYHcZk0TslTqXpRd6LqXeSvSjpcuulWpt0lwjZTRUcCRtghVeI6RfbyZLsV2SateSIhBV2HJlhZybXXFyU2t0ACbaGMIQY40k2a11TePRrI6advxmMar1avUqojfKG8LJ7OShFyfREt0WcGu84+oYbrcahLJaJUR0Tnx8eadvxmtzTJq7lVetEVDazuB5hbkMkvF4SbL26viVvm4n8TfDGNjY1rWo1rUyRqJkiIckJ2SbOTs1985ZTwikulbg73rRvTPuVPMl5srV9nURsVkkPRx2Zrq3cZFVOnLUanPS6ppoqynlp542zQStVkkb0za5qpkqKm9FQ899JuFo8FY9vdlhVVgpahUi42tUjciOYi9K8VyG+ublsy40GrlfmE+qIyZigxfdrZhu5WGmq3R2y4SRyVEKfCVmzxZ6s+nip0GHOEN5atKXU5AP3BA+pnjhjTjSSORjU6VVckBkTfRfoevmlOskSgaylt0LuLPXzovJsXbxURNbnZa8k6s1TNDfVDwOsNx0yNrL3dZ58tb4OTibn+SrXL9JuPBWFKTBGF7dZaJqJDSxI1XZZLI/a569armvlM2QpWyb2OUv4hbOT8N4RVDH/BJr7PRS1uGa913bGnGdQ1DEbOqf3HJqcvVknVnsK+yRuikcx7VY9qq1zXJkqKm1FQ9MSnnCvwbTYexxSXWkYkTLxE6SVjUyTlmKiOcnjRzVXrzXeba7G3hk7Q62dsvCs37M0gZTDuI6zDFdJVUcisWWCWmlbufFI1WuavkXNOtEXcYs4XYSC8aTWGcgAHpvPgyYxteBKfGF3u9QkFNFBAiNTW+R3Gfkxib3L/yupFNf6UdKN00o391bWqsFHEqtpKJrs2Qs/i5d67/EiIQwGPKs8xGjRBWu7zfoACzPB84Pn/bYoxRTdElDbpW+VJJE+lG+VdwlJRWWe33w08OeZzwe+D7l3NijFFNr1SUNulb5UlkRfOjV8a7jbGnTHz9Hmj2trqZ3FuNS5KSkXPW2RyL7L9FqOXxohsAq5wyrtI654btiPVImQy1LmJvcrkair4uKvnUiJuye5zdUpa3Ux8ToVwc5XKqqqqq61Vd4AJp1hangt6J7fHYYsYXGBlXW1TnNomytzSBjXK1Xoi/CVUXXuRNW1SxJ5y0eMr/b6aOmpb5cqanjTJkUNXIxjU6ERFyQ+32/Yn8I7v8Ar0v1iPKpyeclHfoLL7HNzLvaUdFVp0m2KemqYYobmjP6LcEYnKRO3Iq7Vau9v8clKEVlJLQVc9NO3iTQvdG9vQ5FyVPOhmft+xP4R3f9el+sYSeeSpmkmmkdLLI5Xvkeqq5zlXNVVV2qpshFx2bJuk089OnGUso/B2q66VlzZStq6iSobSwpTwpI7Pk40VVRqdSKq+c6inJsJ2AGtVzkREVVXUiJvBuTgs4Mp8T6Qn11YxJYLRD3SxjkzRZlciMz8XsneNqGMnyrJqtsVUHN+RmtHnBOuV+ooq/Ela6zRSIjm0UTEdUZf3lXUxerWvTkTir4HWGX06pS3q7Qz5anzLFI3P8AJRjV+k34CG7JPzOVnr9RKWVLBQzSloXvmiyoY+s4tba5XcWG4QIqMVfiuRfauyTPLWi7lXJSAHo7irDVFjDD1fZ69iPpauJY3as1au5ydaLkqdaHnVcaGS2XCqo5cuVp5XRPy2ZtVUX9hJrnzLcvdDqnqItS6o65Zngj6Q5ZH1mD6t6ujYx1XROVfa605SPy58ZP0ukrMTXQrdn2bSthedj1Zx61lO5U3tkXk1TzOMprmi0SNVUraZRZf0AFecUAAAAAAAAAAAAAAAAAADz70v8AvpYr+Up/TU9BDz70v++liv5Sn9NSRT1Zd8K/El8CInfw97v23/Mxemh0Du2OVkF6t8kjkZGyojc5zlyRERyZqSzo5dGekoIh91/BCf2rtP62z+ZjLpwgMAWmNXSYjp513MpWPmVfmoqecruV9jh1Ta9lF/Izmk+eGn0b4ofUZcj9jKlFRd+cbkRPKqoh55m7tNvCLfpAoJLFZKeWisr3Is80+SS1GS5omSZo1uaIu1VXJNmtF0iS6ouK3Om4fROit8/VnC7DkHCG4tDk2pwZLnDbdL1sbM5GJUxTU7XL8ZWKqJ5Vbl5TVZ9qGtntlbT1lLK6Gpp5GyxSN2se1c0VPEqIeNZWDVbDxISh3R6WA1Nos4Q1gxxboILnVwWe+tajZYKh6Mjld8aNy6sl+Kq5p17Tabq2nZDyzp4ki28or04vnK9prZnE2VTqlyzWGfYoZp8ukN30v4lqIHI6Ns7YM02caONsbvpYpYvS9wjbLhO2VNDh+shut9karGPp3I+GmXZxnOTUqpuametNeRTeSR80jpJHK971VznOXNVVdqqpIqi1uy94bp5wbtksZ2R+ThDk4JJfHJ27PWNt13oap6ZsgnZKqZZ5o1yL/A6gB41nY9L4J46qCOaJ6SRSNR7Ht2ORUzRUP2Vn0A8Ia32+z0uGcUVCUfcyJHR3CT/prH8GN6/By2I7ZkmvLLXY+julFcYEnpKyCqgVM0khla9qp05ouRXyi4vDOIvonRJxkjslWeGXdIZrzhm3tciz08E870TajZHMRv7txu3HumbC+j+ilfWXGGqrmp97t9K9HzPXciontU63ZeXYUjxvjCux5ieuvdwVEnqX5pG1fYxsRMmsTqRETx7d5tqi85LLh2nm7PFawkYI4XYcnLWq9yNamblXJETepLOmOAAAOKvFVclyTUqg3vwXsKWzGkOMLTdqdtTRz08GaLqcx3Gfk5q7nJuUgOljRPc9Fl8WnqEdU2ydVWkrkbk2RPir0OTenlTUYcy5uUix1EHa6X1XqQYsxwfOEHl3NhfFFTq1R0Nxld5EjkVfMjvIpWcHsoqSwzK+iGohyTPTIqXwxaRWY1sdVmvFkt/Jom7Nsjl/+6Ga4PnCD4vc2F8UVOrVHQ3GV2zckcir5kd5FJJwt8IvvGCqG9QRLJNap1SVWprSGTJFXyORnnUixThPDOe09ctJqoxn5lQwATDqSweEuCc3FWF7TeW4r7nSvpY6jkfsdx+TVzUVW8blUzyVcs8k2GW5l/8AjH/a/wD3H24Nem62UdjhwnfquOhlp3KlFVTu4scjHLnybnLqRyKq5Z6lTJN2uybXI5EVFRUXWipvIkpzi8HMajU6qixxctvLZfoVm5l/+Mf9r/8AcOZf/jH/AGv/ANxZSrrILfSy1NVNHTU8TVdJLK5GtYib1VdSIVv0jcLF9uxFDS4Tgp6630zv6RU1LXcWpX4rMlRUanxt67stvkZWS6HlOo1t7xCXov0IxpD4LbsC4NuV+ZiT7ILRNa/ubuDk+Oiva1fZco7LJFVdm40SXHs2nLCOl/DVfh+4TJYbhcKZ9MsFa5OTVzm5IrJNi5KqZIuS5psKf19DPbK6oo6qNYamnkdFLG7a1zVyVPOhvg5PKkW+jstkpRv95fQ+BYTgc3OGDE9/oHuRs9RSRyxou9GPVHZfPT/8hXszODsV1uCMS0F7t7kSppH8ZGu9q9qpk5q9Soqp5TOS5k0SNRU7qpQXmejIIFo/014X0gUUTqe4Q0NwVE5S31ciMla7ejc8uOnW3y5bCaVVzo6GBZ6mrgp4ETNZJZEa1E6c1XIr2mtmcXKucJcslhn3kkbFG573IxjUVznKuSIibVPOHE1xjvGJLrXxJlFVVcs7Eyy1Oerk/aWP098Ie3VFmq8N4XqUrZapqxVVwi/6bI11OYxfhKqalVNSIupVXZV4l1RaWWdHw2iVcXOaxkEn0X0jq7SRhaFu11zp1XLciSNVfoRSMG5+CrhJ990jpdHxK6ktELpleqex5VyKxjfHkrnfom2Twmyyvmq6pSfYuWACuOHAAAAAAAAAAAAAAAAAAB596X/fSxX8pT+mp6CHn3pf99LFfylP6akinqy74V+JL4ERABLOlAARFVck1qAAZKiwxeLk5raS011U52xIaZ71XzIT/C/BtxziSZnK2xLPTO1rPcHozJPyEzfn5PKYuSXU0ztrrWZSSNZ0tLNXVMVPTxPnqJXpHHFG3jOe5VyRERNqqpvq/cFy423RfTV9Oi1GJ4FdU1dJGvG40aon3tnS5mWerarnImfsTcuinQJYtGjWVjsrrfMtddMzJI+qNuvi+PWu3XlqNnEeVu/slFqOJNzXg9F6nmaqKi5LqUFw9L3Bpt+M5J7th5YrVenqr5YnaoKhy7VXL2jl6U1LvTXmVdxdo/xDgSq5C92ueizXJkqpxon/AJL0zavizzN0ZqRb0aqvUL2Xv2I8ADYTAAS3BOinFGkCRv2HtcslMq5OrJvvcDen2a6l8SZr1HjaXUwlKMFmTwiKwQSVU8cMMb5ppHIxkbGq5znKuSIiJtVVLT4R4MTF0VXChuyRQ4muPFqI5V19yOai8SPPyuRyp8bfxUUmGiLg+2jRw2K4VqsuuIMs+6XN+9wLvSJF83GXX4s8jbBFnbnaJzur4g5NRpey8+//AEebl+sVdhm71VruVO6lraZ6skifuXpTpRdqLvRToF89Kehix6UqTj1Te4rtGziwXGFvs2pua9PhtzXYuzXkqZlSceaEMWaP1klrbe6rt7M/6fRZyRZdLstbP0kQ3QsUi002trvSTeJdv0IEADaWIAMthzCd4xfXJSWa21Fxn3tgZmjetztjU61VAeNqKyzEm8tD2hyofhK+4zvEHJU0drqlt0MieykcsTk5bL4qJnxelVz3IqzXRPwV4rZNHc8ZclWTtVHR2uJ3GiavTI74X5KaulV2G7MdsbFgHELGNRjG2yoRrWpkiJyTtSEednlEo9Tr4yaqq/NnnYACQXpY7gZ+62KPzEHpPLG4rwpbMaWOptN2pm1NHOmtF1OYu5zV3OTcpXLgZ+62KPzEHpPLSEKz3zkde3HUya/p9Cg2ljRPc9Fl8WnqEdU2ydVWkrkbk2RPir0OTenlTUQY9G8V4UtmNLHU2m7UzamjnTWi6nMXc5q7nJuUo7pY0T3PRZfFp6hHVNsnVVpK5G5NkT4q9Dk3p5U1G+uzm2fUudHrFeuSfvfUgxY/Qdpzprpb/tKxpI2ejqI1paesqFzRzHJxeSlXoyXJHeRdylcAbJRUlhk26mN8eWX/AITbSxouuGi7Ej6KdHTW+ZVfRVeWqVmexehyZoip5dioQk37op0p2nGlmjwHpBayron5MobjO7J0TtjWuftaqbGv8i6jAaSuDZiPBk89VaoZL7ZkVXNlgbnPG3oexNa5dLc01Z6thipY2kaK7+SXhX7S7+TNQmbs+OMRYej5O2X240EeWXJ09U9jcvEi5GEVFaqoqZKm1FBs6k1pSWGjJXfEt3v/ABfspda25cVc07rqHy5L+kqmNBmsMYKvuM6rueyWupuMiLk5YmewZ+U9fYt8qoebI89mC7Iwpsq/aCsTWfR7S4sqYnvR/sqijci8tTw5IjHuTo25p8FOLnvy3foe4MtNhOphvGJnQ3G6Rqj4aRnsoYHfGVV9u5PMnXqVN7yRsmjdHI1r2ORWua5M0VF2oqEeVuH7JSajiSjNKrdLqeZ4LRaV+CqyumkueDOTp5HKrpLXK7ixqv8A4nL7X8ldXQqbCuGIcL3bCdctHeLdUW6pTYydit4ydLV2OTrTNDdGal0LSnU13rMHv28zGAAzJQANg4D0FYtx86KWlt7qG3PyXu6tzjjy6Wptf5EVOtDxtLdmuc41rmm8IhlisVdiW70tsttM+rral6MjiYmtV6epE2qq6kRC+OiTRzBoywdTWprmS1r1WarnYmqSVduXUiZInUme9TraL9Dlj0XUX9Dj7rukjOLPcZmpyj+lGp8Fue5OhM1XInhEss5tl0OY1us+0exD3fqAAaCqAAAAAAAAAAAAAAAAAABoW8cLez2e711A+w10j6Wd8DntlZk5WuVuaeY30VQxFwT8XXfEFzrobjZWw1VVLOxr55kcjXPVUzyiXXkptgov3ifpI0Sb8d/AlXPIsvg9X9qwc8iy+D1f2rCC8z7GXfOxdvN6ocz7GXfOxdvN6o24qLLwuH9/Vk655Fl8Hq/tWDnkWXwer+1YQXmfYy752Lt5vVDmfYy752Lt5vVDFQ8Lh/f1ZOueRZfB6v7Vg55Fl8Hq/tWEF5n2Mu+di7eb1Q5n2Mu+di7eb1QxUPC4f39WTrnkWXwer+1YOeRZfB6v7VhBeZ9jLvnYu3m9UOZ9jLvnYu3m9UMVDwuH9/Vk655Fl8Hq/tWH4m4YVhqInRy4arZY3alY+SNUXyKQjmfYy752Lt5vVDmfYy752Lt5vVDFR74XD+/qzs3PTNovu8rpanRu1ZHbXRJHEq9a8XIxbNIWiKOflU0c1Ku6HVr1b81X5fQdvmfYy752Lt5vVDmfYy752Lt5vVGWYdzcpaRbKx/NmTtWnnRvZJEkotHUcEqbJOThc9PE5UVSTN4Y1jY1Gtw7XNampESViIhBuZ9jLvnYu3m9UOZ9jLvnYu3m9UeYrfVmuUNDLeUs/mydc8iy+D1f2rBzyLL4PV/asILzPsZd87F283qhzPsZd87F283qjzFRh4XD+/qydc8iy+D1f2rBzyLKv9nq/tWEF5n2Mu+di7eb1Q5n2Mu+di7eb1QxUPC4f39WZa9af9HeInq+46PW1Uq7ZXMiR6/pIiL9JHptIWiKd6Pdo5qUVFz9hWvanmR6IdvmfYy752Lt5vVDmfYy752Lt5vVGXsLozcnpI7Rsa/NnYoNMei22ua6HRsxXN1osyRy5fOzJZS8LzDtDCkVNherp4k2MifG1qeRCF8z7GXfOxdvN6ocz7GXfOxdvN6o8arfVmEo6KfvTz+bJ1zyLL4PV/asHPIsvg9X9qwgvM+xl3zsXbzeqHM+xl3zsXbzeqPMVGHhcP7+rJ1zyLL4PV/asHPIsvg9X9qwgvM+xl3zsXbzeqHM+xl3zsXbzeqGKh4XD+/qydc8iy+D1f2rBzyLL4PV/asILzPsZd87F283qhzPsZd87F283qhioeFw/v6snXPIsvg9X9qwc8iy+D1f2rCC8z7GXfOxdvN6ocz7GXfOxdvN6oYqHhcP7+rJ1zyLL4PV/asHPIsvg9X9qwgvM+xl3zsXbzeqHM+xl3zsXbzeqGKh4XD+/qzZOH+FjaMQX622uOxVsUldUxUzZHSsVGq9yNRV6kzLLtwdO5qL3RHrTPYpTXCPBVxZYMV2W51Fxsz6eirYKmRsU8yuVrJGuVERYkTPJN6oXZZi6iaxqLHPmiZe1T+ZzXGbNZV4f2BZ652z2x1/M3U08Ncnzy2+LIhf9BdgxS/j3a1W2ul/CyU6cp85Nf0kZl4ImA5pUkdY6ZHJubPO1PMj8ja324UX4Of5qfzH24UX4Of5qfzObWr4+ukX8kWEY8MisRsx/uZru28GPBtqcjoMP2pzkXNFnhWbL5+ZlMWW+PAGGpK/k43U0CtYkFO1GZZrlq3ITD7cKL8HP81P5kW0mTtxlhKotdFnFUSPY5HT6mZI7NdaZr9Bvo1PG5WJWxfL8Eb9NVwa3U1LU2ew5R5syfu8y5vTJrT7stF3uqPntH3ZaLvdUfPaYL7j15/GaDtH/UH3Hrz+M0HaP+oWvi8Q7eiPsH3T+7X/AFl/fMzv3ZaLvdUfPafCs0rWm4wLDV2Z1VCu2OZGPavkUxP3Hrz+M0HaP+oPuPXn8ZoO0f8AUHi8Q7eiH3T+7Zf5y/5JmBxEzRtHRU9dUYFp1Sqlli4tOiQ5KxGKq5NVE18omzoI9TTaK6WRXswG9zlXPKSqe9PM56oTm+6GL3c7RQUsVVQNkgnnlcr5Hoio9sSJl7Db97X6DBc3vEX47a+1k9WfU+EV8Ls0NctdPFrzndrzeNl/TB+df2itVHFdRVwmbenT9h5b2wvN7vc7Fm0lYHw87jW3BMFHJ+EihiR/zss/pJBzibb3oqu0aRfm94i/HbX2snqxze8Rfjtr7WT1ZbfZv2ff+Nf3M5d26uTy9yUc4q296KrtGm0LPcW3i00NexixsqoGTtY7a1HNR2S+c0Pze8Rfjtr7WT1ZvPDtuktGH7ZQzOa6alpYoHuYqq1XNYiLlnlqzQoOL1cNrhB6GWXnfdv6kiiVzb8QyAAOYJgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/9k=" alt="Bookeo" class="footer-logo-img">
+  <p>© 2025 Bookeo · Libros de fotos con vídeos QR</p>
+    <ul class="footer-links">
+    <li><a href="privacidad.html" target="_blank">Privacidad</a></li>
+    <li><a href="terminos.html" target="_blank">Términos</a></li>
+    <li><a href="envios-devoluciones.html" target="_blank">Envíos y devoluciones</a></li>
+    <li><a href="#" onclick="abrirContacto();return false;">Contacto</a></li>
+    <li class="footer-sep">|</li>
+    <li><a href="principal.html">Principal</a></li>
+    <li><a href="viajes.html">Especial viajes</a></li>
+  </ul>
+</footer>
+
+<!-- MODAL CÓMO FUNCIONA -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Así de fácil es crear tu libro</h2>
+      <p>3 pasos · ~4 minutos · visualización en el visor</p>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-steps">
+        <div class="modal-step"><div class="modal-step-ico">📷</div><div class="modal-step-body"><h4>1 · Sube tus fotos y vídeos</h4><p>Todo en un paso desde tu galería. El sistema separa fotos de vídeos y los ordena por fecha y destino automáticamente.</p></div></div>
+        <div class="modal-step"><div class="modal-step-ico">✨</div><div class="modal-step-body"><h4>2 · La IA diseña el libro en ~4 minutos</h4><p>Organiza el viaje: ida, días en orden cronológico, vuelta. Coloca los QR en la página exacta de cada vídeo y genera una preview completa.</p></div></div>
+        <div class="modal-step"><div class="modal-step-ico">✏️</div><div class="modal-step-body"><h4>3 · Visualiza y edita en el visor</h4><p>Visualiza tu libro completo en el visor interactivo. Mueve fotos, cambia textos y ajusta layouts hasta que esté perfecto.</p></div></div>
+        <div class="modal-step"><div class="modal-step-ico">📦</div><div class="modal-step-body"><h4>4 · Confirma y recíbelo en casa</h4><p>Impresión en tapa dura de calidad profesional. Entrega en 5–7 días hábiles a cualquier punto de España.</p></div></div>
+      </div>
+      <div class="modal-drive">
+        <div class="modal-drive-title">
+          <svg width="19" height="19" viewBox="0 0 24 24"><path d="M4.433 22l-2.433-4.231 7.637-13.238 2.433 4.231L4.433 22z" fill="#0066DA"/><path d="M15.567 22H4.433l2.433-4H18l-2.433 4z" fill="#00AC47"/><path d="M18 18H6.866L14.363 4.769 21.567 18H18z" fill="#EA4335"/></svg>
+          Conecta tu Google Drive para los vídeos
+        </div>
+        <p class="modal-drive-desc">Tus vídeos se guardan en tu Google Drive en una carpeta llamada <strong>Mibookeo</strong> — accesible solo por ti, sin coste extra.</p>
+        <div class="modal-drive-note">* Solo creamos la carpeta <strong>Mibookeo</strong>. <strong>No tenemos acceso a ningún otro archivo.</strong></div>
+      </div>
+      <button class="modal-cta" onclick="irAlCreador()">Elegir mi formato y empezar →</button>
+      <button class="modal-tutorial" onclick="verTutorial()"><span class="tutorial-ico">▶</span> Ver vídeo tutorial</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// NAV SCROLL
+window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>20));
+const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(r=>{observer.observe(r);r.classList.add('visible');});
+
+// SCROLL
+function scrollToPrecios(e){if(e)e.preventDefault();document.getElementById('precios').scrollIntoView({behavior:'smooth',block:'start'});}
+
+// MODAL CÓMO FUNCIONA
+function abrirModal(){document.getElementById('modalOverlay').classList.add('show');document.body.style.overflow='hidden';}
+function cerrarModal(){document.getElementById('modalOverlay').classList.remove('show');document.body.style.overflow='';}
+function irAlCreador(){cerrarModal();setTimeout(()=>document.getElementById('precios').scrollIntoView({behavior:'smooth',block:'start'}),200);}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)cerrarModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cerrarModal();cerrarContacto();}});
+
+// CARRUSEL
+const momentos=['👶 Primera sonrisa','🌙 Primer sueño en casa','👣 Primeros pasos','❤️ Familia completa'];
+let current=0;
+const track=document.getElementById('carouselTrack');
+function goToSlide(idx){
+  current=((idx%4)+4)%4;
+  track.classList.add('animating');
+  track.style.transform='translateX(-'+(current*12.5)+'%)';
+  document.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===current));
+  setTimeout(()=>track.classList.remove('animating'),900);
+}
+let timer=setInterval(()=>goToSlide(current+1),5000);
+track.addEventListener('touchstart',e=>{window._tx=e.touches[0].clientX;},{passive:true});
+track.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-window._tx;if(Math.abs(dx)>40){clearInterval(timer);goToSlide(dx<0?current+1:current-1);timer=setInterval(()=>goToSlide(current+1),5000);}},{passive:true});
+
+// ORIENTACIÓN
+function setOrientation(t){
+  document.getElementById('btn-vertical').className='ori-btn '+(t==='vertical'?'active':'inactive');
+  document.getElementById('btn-horizontal').className='ori-btn '+(t==='horizontal'?'active':'inactive');
+  document.getElementById('ori-note').textContent=t==='vertical'?'📱 Vertical · ideal para retratos de bebés':'🖼 Horizontal · ideal para fotos en grupo';
+}
+
+// PRECIOS
+const BASE={small:26.90,medium:32.60,large:46.50};
+const PACK={small:.50,medium:.60,large:.80};
+const BPAGES={small:30,medium:30,large:30};
+const BPHOTOS={small:60,medium:100,large:140};
+const packs={small:0,medium:0,large:0};
+function changePacks(s,d){
+  packs[s]=Math.max(0,Math.min(40,packs[s]+d));
+  const p=packs[s],total=(BASE[s]+p*PACK[s]).toFixed(2);
+  document.getElementById('packs-'+s).textContent=p===0?'0 · +0,00€':'+'+(p*2)+' págs · +'+(p*PACK[s]).toFixed(2)+'€';
+  document.getElementById('total-'+s).textContent=total+'€';
+  document.getElementById('pages-'+s).textContent=(BPAGES[s]+p*2)+' páginas · hasta '+(BPHOTOS[s]+p*4)+' fotos · tapa dura';
+  const el=document.getElementById('price-'+s);
+  el.textContent=total.replace('.',',');
+  el.style.transform='scale(1.15)';el.style.color='var(--green-dark)';
+  setTimeout(()=>{el.style.transform='';el.style.color='';},200);
+}
+
+// MODAL CONTACTO
+function abrirContacto(){document.getElementById('contactOverlay').classList.add('show');document.body.style.overflow='hidden';}
+function cerrarContacto(){document.getElementById('contactOverlay').classList.remove('show');document.body.style.overflow='';setTimeout(()=>{document.getElementById('contactBody').style.display='';document.getElementById('contactSent').style.display='none';},400);}
+function enviarContacto(){
+  var n=document.getElementById('cNombre').value.trim();
+  var e=document.getElementById('cEmail').value.trim();
+  var a=document.getElementById('cAsunto').value;
+  var m=document.getElementById('cMensaje').value.trim();
+  if(!n||!e||!a||!m){alert('Por favor rellena todos los campos');return;}
+  var EMAIL_PEDIDOS='pedidos@mibookeo.es';
+  var EMAIL_INFORMACION='info@mibookeo.es';
+  var destino=a==='pedido'?EMAIL_PEDIDOS:EMAIL_INFORMACION;
+  var asunto=a==='pedido'?'Pedido - Contacto':'Informacion - Contacto';
+  window.location.href='mailto:'+destino+'?subject='+encodeURIComponent(asunto)+'&body='+encodeURIComponent('Nombre: '+n+'\nEmail: '+e+'\n\n'+m);
+  document.getElementById('contactBody').style.display='none';
+  document.getElementById('sentEmail').textContent=destino;
+  document.getElementById('contactSent').style.display='block';
+}
+document.getElementById('contactOverlay').addEventListener('click',function(e){if(e.target===this)cerrarContacto();});
+</script>
+</body>
+</html>
