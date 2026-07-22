@@ -29,10 +29,11 @@ from moviepy.editor import (
     CompositeAudioClip,
 )
 
-# ── Bookeo: subida a Drive, login OAuth, y creación del libro ──
+# ── Bookeo: subida a Drive, login OAuth, Supabase y creación del libro ──
 from subir_drive import procesar_video
 from google_auth import generar_url_autorizacion, intercambiar_codigo_por_token
 from crear_libro_railway import crear_libro
+from supabase_client import guardar_refresh_token_cliente
 
 app = FastAPI(title="Bookeo Backend", version="1.0.0")
 
@@ -48,7 +49,6 @@ app.add_middleware(
 MUSIC_DIR = Path(__file__).parent / "music"
 MUSIC_DIR.mkdir(exist_ok=True)
 
-# Mapeo género → archivo MP3
 GENRE_FILES: dict[str, str] = {
     "romantica":   "romantica.mp3",
     "boda":        "boda.mp3",
@@ -81,21 +81,23 @@ def health():
 # ═══════════════════════════════════════════════════════
 
 @app.get("/auth/google/iniciar")
-def auth_google_iniciar(pedido_id: str):
-    url = generar_url_autorizacion(pedido_id)
+def auth_google_iniciar(cliente_id: str):
+    """
+    El 'state' que viaja hacia Google es el cliente_id (no el pedido_id),
+    porque el refresh_token pertenece al cliente, no a un pedido concreto.
+    """
+    url = generar_url_autorizacion(cliente_id)
     return RedirectResponse(url)
 
 
 @app.get("/auth/google/callback")
 def auth_google_callback(code: str, state: str):
-    pedido_id = state
+    cliente_id = state
     refresh_token = intercambiar_codigo_por_token(code)
 
-    # TODO: guardar refresh_token en Supabase, tabla 'pedidos',
-    # asociado a este pedido_id. Pendiente de conectar Supabase:
-    # supabase.table("pedidos").update({"google_refresh_token": refresh_token}).eq("id", pedido_id).execute()
+    guardar_refresh_token_cliente(cliente_id, refresh_token)
 
-    return RedirectResponse(f"https://mibookeo.es/creador.html?drive_ok=1&pedido_id={pedido_id}")
+    return RedirectResponse(f"https://mibookeo.es/creador.html?drive_ok=1&cliente_id={cliente_id}")
 
 
 # ═══════════════════════════════════════════════════════
@@ -108,9 +110,9 @@ async def crear_pedido(
     videos: list[UploadFile] = File(default=[]),
     titulo: str = Form(...),
     nombre_cliente: str = Form(...),
+    cliente_id: str = Form(...),
     pedido_id: str = Form(...),
     google_refresh_token: str = Form(...),
-    carpeta_drive_id: Optional[str] = Form(None),
 ):
     work_dir = Path(tempfile.mkdtemp(prefix=f"bookeo_pedido_{pedido_id}_"))
     carpeta_temp = work_dir / "temp"
@@ -133,17 +135,17 @@ async def crear_pedido(
                 shutil.copyfileobj(video.file, f)
             videos_rutas.append(str(dest))
 
-        # 3. Subir cada vídeo al Drive DEL CLIENTE y construir qr_urls
+        # 3. Subir cada vídeo al Drive DEL CLIENTE (carpeta principal + subcarpeta del pedido)
         qr_urls = {}
-        carpeta_id_actual = carpeta_drive_id
         for ruta_video in videos_rutas:
             nombre_archivo = Path(ruta_video).name
-            url, file_id, carpeta_id_actual = procesar_video(
+            url, file_id = procesar_video(
                 ruta_local=ruta_video,
                 nombre_archivo=nombre_archivo,
+                cliente_id=cliente_id,
                 pedido_id=pedido_id,
                 refresh_token_cliente=google_refresh_token,
-                carpeta_id_existente=carpeta_id_actual,
+                nombre_album=titulo,
             )
             qr_urls[nombre_archivo] = url
 
@@ -158,7 +160,7 @@ async def crear_pedido(
             carpeta_temp=str(carpeta_temp),
         )
 
-        return {"ok": True, "pdf": ruta_pdf, "carpeta_drive_id": carpeta_id_actual}
+        return {"ok": True, "pdf": ruta_pdf}
 
     except Exception as e:
         shutil.rmtree(work_dir, ignore_errors=True)
