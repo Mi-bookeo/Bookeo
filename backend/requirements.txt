@@ -5,6 +5,7 @@ redis==5.0.4
 anthropic==0.28.0
 pillow==10.3.0
 reportlab==4.2.0
+numpy==1.26.4
 opencv-python-headless==4.9.0.80
 qrcode[pil]==7.4.2
 stripe==9.12.0
