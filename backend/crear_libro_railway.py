@@ -166,6 +166,7 @@ AW = 208
 AH = 208
 MG = 10     # margen interior mm
 GAP = 3     # separación entre fotos mm
+QR_MM = 22  # tamaño QR en mm
 
 QR_URL_PRUEBA = ""  # se pasa por parámetro desde el backend
 MIN_PPI_OK  = 180
