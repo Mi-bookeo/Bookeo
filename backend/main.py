@@ -1,10 +1,11 @@
- """
+"""
 Bookeo · Backend unificador de vídeos
 Despliega en Railway · Python 3.11+
 
 Endpoints:
+  POST /crear-pedido/propuestas →  sube fotos+vídeos a Drive, analiza con IA, devuelve 2 portadas
+  POST /crear-pedido/confirmar  →  recibe la portada elegida, genera el PDF completo
   POST /merge              →  recibe hasta 5 vídeos + música → devuelve MP4
-  POST /crear-pedido       →  recibe fotos+vídeos → sube a Drive → genera PDF del libro
   GET  /auth/google/iniciar   →  inicia login de Google Drive del cliente
   GET  /auth/google/callback  →  recibe el token, obtiene el email, crea/identifica al cliente
   GET  /health              →  healthcheck para Railway
@@ -32,7 +33,7 @@ from moviepy.editor import (
 # ── Bookeo: subida a Drive, login OAuth, Supabase y creación del libro ──
 from subir_drive import procesar_video
 from google_auth import generar_url_autorizacion, intercambiar_codigo_por_token_y_email
-from crear_libro_railway import crear_libro
+from crear_libro_railway import generar_propuestas_portada, generar_pdf_completo
 from supabase_client import obtener_o_crear_cliente, guardar_refresh_token_cliente
 
 app = FastAPI(title="Bookeo Backend", version="1.0.0")
@@ -44,6 +45,11 @@ app.add_middleware(
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
+
+# ── Caché en memoria de pedidos en proceso (entre /propuestas y /confirmar) ──
+# NOTA: se pierde si Railway reinicia el servicio. Suficiente para el MVP;
+# más adelante se puede persistir en Supabase si hace falta.
+PEDIDOS_EN_PROCESO: dict = {}
 
 # ── Carpeta de músicas automáticas (súbelas a /music/ en Railway) ──
 MUSIC_DIR = Path(__file__).parent / "music"
@@ -82,23 +88,12 @@ def health():
 
 @app.get("/auth/google/iniciar")
 def auth_google_iniciar():
-    """
-    No requiere ningún parámetro: el cliente todavía no existe en
-    Supabase en este punto. Se identifica/crea DESPUÉS, en el callback,
-    usando el email que nos da Google.
-    """
     url = generar_url_autorizacion()
     return RedirectResponse(url)
 
 
 @app.get("/auth/google/callback")
 def auth_google_callback(code: str = None, error: str = None, **kwargs):
-    """
-    Recibe la respuesta de Google tras el consentimiento.
-    Se usa code=None y error=None por defecto (en vez de exigirlos)
-    para poder devolver un mensaje claro si algo falta, en vez de un
-    422 genérico de FastAPI.
-    """
     if error:
         return {"ok": False, "error": f"Google devolvió un error: {error}"}
     if not code:
@@ -117,11 +112,11 @@ def auth_google_callback(code: str = None, error: str = None, **kwargs):
 
 
 # ═══════════════════════════════════════════════════════
-#  CREAR PEDIDO — sube vídeos a Drive + genera el libro
+#  FASE A — SUBIR FOTOS/VÍDEOS + PROPUESTAS DE PORTADA
 # ═══════════════════════════════════════════════════════
 
-@app.post("/crear-pedido")
-async def crear_pedido(
+@app.post("/crear-pedido/propuestas")
+async def crear_pedido_propuestas(
     fotos: list[UploadFile] = File(...),
     videos: list[UploadFile] = File(default=[]),
     titulo: str = Form(...),
@@ -151,8 +146,7 @@ async def crear_pedido(
                 shutil.copyfileobj(video.file, f)
             videos_rutas.append(str(dest))
 
-        # 3. Subir cada vídeo al Drive DEL CLIENTE (carpeta principal + subcarpeta del pedido)
-        #    Las fotos NO se suben a Drive, solo se usan para generar el PDF.
+        # 3. Subir cada vídeo al Drive DEL CLIENTE (las fotos NO se suben a Drive)
         qr_urls = {}
         for ruta_video in videos_rutas:
             nombre_archivo = Path(ruta_video).name
@@ -166,22 +160,76 @@ async def crear_pedido(
             )
             qr_urls[nombre_archivo] = url
 
-        # 4. Generar el PDF del libro
-        ruta_pdf = crear_libro(
-            fotos_rutas=fotos_rutas,
-            videos_rutas=videos_rutas,
-            titulo=titulo,
-            nombre_cliente=nombre_cliente,
-            qr_urls=qr_urls,
-            carpeta_sal=str(work_dir / "salida"),
-            carpeta_temp=str(carpeta_temp),
+        # 4. Analizar con IA → capítulos + 2 propuestas de portada (SIN generar PDF)
+        resultado = generar_propuestas_portada(fotos_rutas, videos_rutas)
+
+        # 5. Guardar todo en caché para usarlo en /confirmar
+        PEDIDOS_EN_PROCESO[pedido_id] = {
+            "diseño": resultado["diseño"],
+            "fotos": resultado["fotos"],
+            "videos_rutas": videos_rutas,
+            "qr_urls": qr_urls,
+            "titulo": titulo,
+            "nombre_cliente": nombre_cliente,
+            "work_dir": str(work_dir),
+            "carpeta_temp": str(carpeta_temp),
+        }
+
+        return {
+            "ok": True,
+            "pedido_id": pedido_id,
+            "tipo": resultado["diseño"].get("tipo"),
+            "portada_opciones": resultado["portada_opciones"],
+        }
+
+    except Exception as e:
+        shutil.rmtree(work_dir, ignore_errors=True)
+        raise HTTPException(status_code=500, detail=f"Error generando propuestas: {e}")
+
+
+# ═══════════════════════════════════════════════════════
+#  FASE B — CONFIRMAR PORTADA → GENERAR PDF COMPLETO
+# ═══════════════════════════════════════════════════════
+
+@app.post("/crear-pedido/confirmar")
+async def crear_pedido_confirmar(
+    pedido_id: str = Form(...),
+    portada_foto: Optional[str] = Form(None),   # nombre de archivo, o vacío si es portada en blanco
+    portada_titulo: Optional[str] = Form(None),
+    portada_subtitulo: Optional[str] = Form(None),
+):
+    datos = PEDIDOS_EN_PROCESO.get(pedido_id)
+    if not datos:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado o expirado. Vuelve a subir tus fotos.")
+
+    portada_elegida = {
+        "foto": portada_foto if portada_foto else None,
+        "titulo": portada_titulo or datos["titulo"],
+        "subtitulo": portada_subtitulo or "",
+    }
+
+    work_dir = Path(datos["work_dir"])
+    carpeta_sal = str(work_dir / "salida")
+
+    try:
+        ruta_pdf = generar_pdf_completo(
+            diseño=datos["diseño"],
+            fotos=datos["fotos"],
+            videos_rutas=datos["videos_rutas"],
+            qr_urls=datos["qr_urls"],
+            portada_elegida=portada_elegida,
+            nombre_cliente=datos["nombre_cliente"],
+            carpeta_sal=carpeta_sal,
+            carpeta_temp=datos["carpeta_temp"],
         )
+
+        # Ya no hace falta mantenerlo en caché
+        del PEDIDOS_EN_PROCESO[pedido_id]
 
         return {"ok": True, "pdf": ruta_pdf}
 
     except Exception as e:
-        shutil.rmtree(work_dir, ignore_errors=True)
-        raise HTTPException(status_code=500, detail=f"Error creando el pedido: {e}")
+        raise HTTPException(status_code=500, detail=f"Error generando el PDF final: {e}")
 
 
 # ═══════════════════════════════════════════════════════
@@ -301,4 +349,4 @@ from starlette.background import BackgroundTask
 def _cleanup_task(directory: Path) -> BackgroundTask:
     def _cleanup():
         shutil.rmtree(directory, ignore_errors=True)
-    return BackgroundTask(_cleanup)                   
+    return BackgroundTask(_cleanup)
