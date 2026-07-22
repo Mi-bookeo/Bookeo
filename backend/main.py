@@ -3,9 +3,11 @@ Bookeo · Backend unificador de vídeos
 Despliega en Railway · Python 3.11+
 
 Endpoints:
-  POST /merge         →  recibe hasta 5 vídeos + música → devuelve MP4
-  POST /crear-pedido  →  recibe fotos+vídeos → sube a Drive → genera PDF del libro
-  GET  /health        →  healthcheck para Railway
+  POST /merge              →  recibe hasta 5 vídeos + música → devuelve MP4
+  POST /crear-pedido       →  recibe fotos+vídeos → sube a Drive → genera PDF del libro
+  GET  /auth/google/iniciar   →  inicia login de Google Drive del cliente
+  GET  /auth/google/callback  →  recibe el token tras el consentimiento
+  GET  /health              →  healthcheck para Railway
 """
 
 import os
@@ -16,7 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # ── MoviePy ──
@@ -27,8 +29,9 @@ from moviepy.editor import (
     CompositeAudioClip,
 )
 
-# ── Bookeo: subida a Drive y creación del libro ──
+# ── Bookeo: subida a Drive, login OAuth, y creación del libro ──
 from subir_drive import procesar_video
+from google_auth import generar_url_autorizacion, intercambiar_codigo_por_token
 from crear_libro_railway import crear_libro
 
 app = FastAPI(title="Bookeo Backend", version="1.0.0")
@@ -74,6 +77,28 @@ def health():
 
 
 # ═══════════════════════════════════════════════════════
+#  GOOGLE DRIVE — LOGIN OAUTH DEL CLIENTE
+# ═══════════════════════════════════════════════════════
+
+@app.get("/auth/google/iniciar")
+def auth_google_iniciar(pedido_id: str):
+    url = generar_url_autorizacion(pedido_id)
+    return RedirectResponse(url)
+
+
+@app.get("/auth/google/callback")
+def auth_google_callback(code: str, state: str):
+    pedido_id = state
+    refresh_token = intercambiar_codigo_por_token(code)
+
+    # TODO: guardar refresh_token en Supabase, tabla 'pedidos',
+    # asociado a este pedido_id. Pendiente de conectar Supabase:
+    # supabase.table("pedidos").update({"google_refresh_token": refresh_token}).eq("id", pedido_id).execute()
+
+    return RedirectResponse(f"https://mibookeo.es/creador.html?drive_ok=1&pedido_id={pedido_id}")
+
+
+# ═══════════════════════════════════════════════════════
 #  CREAR PEDIDO — sube vídeos a Drive + genera el libro
 # ═══════════════════════════════════════════════════════
 
@@ -84,6 +109,7 @@ async def crear_pedido(
     titulo: str = Form(...),
     nombre_cliente: str = Form(...),
     pedido_id: str = Form(...),
+    google_refresh_token: str = Form(...),
     carpeta_drive_id: Optional[str] = Form(None),
 ):
     work_dir = Path(tempfile.mkdtemp(prefix=f"bookeo_pedido_{pedido_id}_"))
@@ -107,7 +133,7 @@ async def crear_pedido(
                 shutil.copyfileobj(video.file, f)
             videos_rutas.append(str(dest))
 
-        # 3. Subir cada vídeo a Drive y construir qr_urls
+        # 3. Subir cada vídeo al Drive DEL CLIENTE y construir qr_urls
         qr_urls = {}
         carpeta_id_actual = carpeta_drive_id
         for ruta_video in videos_rutas:
@@ -116,13 +142,10 @@ async def crear_pedido(
                 ruta_local=ruta_video,
                 nombre_archivo=nombre_archivo,
                 pedido_id=pedido_id,
+                refresh_token_cliente=google_refresh_token,
                 carpeta_id_existente=carpeta_id_actual,
             )
             qr_urls[nombre_archivo] = url
-
-        # IMPORTANTE: guarda carpeta_id_actual en Supabase (tabla pedidos)
-        # aquí, para que el visor reutilice la misma carpeta si el cliente
-        # añade más vídeos después. (Pendiente de conectar Supabase.)
 
         # 4. Generar el PDF del libro
         ruta_pdf = crear_libro(
