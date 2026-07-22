@@ -1,4 +1,4 @@
-"""
+ """
 Bookeo · Backend unificador de vídeos
 Despliega en Railway · Python 3.11+
 
@@ -83,25 +83,34 @@ def health():
 @app.get("/auth/google/iniciar")
 def auth_google_iniciar():
     """
-    Ya no requiere cliente_id ni pedido_id como parámetro: el cliente
-    todavía no existe en Supabase en este punto. Se identifica/crea
-    DESPUÉS, en el callback, usando el email que nos da Google.
+    No requiere ningún parámetro: el cliente todavía no existe en
+    Supabase en este punto. Se identifica/crea DESPUÉS, en el callback,
+    usando el email que nos da Google.
     """
     url = generar_url_autorizacion()
     return RedirectResponse(url)
 
 
 @app.get("/auth/google/callback")
-def auth_google_callback(code: str):
-    refresh_token, email = intercambiar_codigo_por_token_y_email(code)
+def auth_google_callback(code: str = None, error: str = None, **kwargs):
+    """
+    Recibe la respuesta de Google tras el consentimiento.
+    Se usa code=None y error=None por defecto (en vez de exigirlos)
+    para poder devolver un mensaje claro si algo falta, en vez de un
+    422 genérico de FastAPI.
+    """
+    if error:
+        return {"ok": False, "error": f"Google devolvió un error: {error}"}
+    if not code:
+        return {"ok": False, "error": "No se recibió el parámetro 'code' de Google"}
 
-    # Busca al cliente por email, o lo crea si es la primera vez
-    cliente_id = obtener_o_crear_cliente(email)
+    try:
+        refresh_token, email = intercambiar_codigo_por_token_y_email(code)
+        cliente_id = obtener_o_crear_cliente(email)
+        guardar_refresh_token_cliente(cliente_id, refresh_token, email=email)
+    except Exception as e:
+        return {"ok": False, "error": f"Fallo procesando el login de Google: {e}"}
 
-    # Guarda el refresh_token (y el email de Drive) en su fila
-    guardar_refresh_token_cliente(cliente_id, refresh_token, email=email)
-
-    # Redirige de vuelta al creador.html con el cliente_id ya listo
     return RedirectResponse(
         f"https://mibookeo.es/creador.html?drive_ok=1&cliente_id={cliente_id}"
     )
@@ -292,4 +301,4 @@ from starlette.background import BackgroundTask
 def _cleanup_task(directory: Path) -> BackgroundTask:
     def _cleanup():
         shutil.rmtree(directory, ignore_errors=True)
-    return BackgroundTask(_cleanup)
+    return BackgroundTask(_cleanup)                   
