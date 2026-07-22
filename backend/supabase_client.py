@@ -14,8 +14,22 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 # ═══════════════════════════════════════════════════════
-#  CLIENTE — carpeta principal de Drive + refresh_token
+#  CLIENTE — buscar o crear por email
 # ═══════════════════════════════════════════════════════
+
+def obtener_o_crear_cliente(email):
+    """
+    Busca un cliente por su email. Si ya existe, devuelve su id.
+    Si no existe, lo crea y devuelve el id recién generado.
+    """
+    resp = supabase.table("clientes").select("id").eq("email", email).execute()
+
+    if resp.data:
+        return resp.data[0]["id"]
+
+    nuevo = supabase.table("clientes").insert({"email": email}).execute()
+    return nuevo.data[0]["id"]
+
 
 def obtener_cliente_drive(cliente_id):
     """Devuelve refresh_token y carpeta_drive_id principal del cliente, si existen."""
