@@ -6,7 +6,7 @@ Endpoints:
   POST /merge              →  recibe hasta 5 vídeos + música → devuelve MP4
   POST /crear-pedido       →  recibe fotos+vídeos → sube a Drive → genera PDF del libro
   GET  /auth/google/iniciar   →  inicia login de Google Drive del cliente
-  GET  /auth/google/callback  →  recibe el token tras el consentimiento
+  GET  /auth/google/callback  →  recibe el token, obtiene el email, crea/identifica al cliente
   GET  /health              →  healthcheck para Railway
 """
 
@@ -31,9 +31,9 @@ from moviepy.editor import (
 
 # ── Bookeo: subida a Drive, login OAuth, Supabase y creación del libro ──
 from subir_drive import procesar_video
-from google_auth import generar_url_autorizacion, intercambiar_codigo_por_token
+from google_auth import generar_url_autorizacion, intercambiar_codigo_por_token_y_email
 from crear_libro_railway import crear_libro
-from supabase_client import guardar_refresh_token_cliente
+from supabase_client import obtener_o_crear_cliente, guardar_refresh_token_cliente
 
 app = FastAPI(title="Bookeo Backend", version="1.0.0")
 
@@ -81,23 +81,30 @@ def health():
 # ═══════════════════════════════════════════════════════
 
 @app.get("/auth/google/iniciar")
-def auth_google_iniciar(cliente_id: str):
+def auth_google_iniciar():
     """
-    El 'state' que viaja hacia Google es el cliente_id (no el pedido_id),
-    porque el refresh_token pertenece al cliente, no a un pedido concreto.
+    Ya no requiere cliente_id ni pedido_id como parámetro: el cliente
+    todavía no existe en Supabase en este punto. Se identifica/crea
+    DESPUÉS, en el callback, usando el email que nos da Google.
     """
-    url = generar_url_autorizacion(cliente_id)
+    url = generar_url_autorizacion()
     return RedirectResponse(url)
 
 
 @app.get("/auth/google/callback")
-def auth_google_callback(code: str, state: str):
-    cliente_id = state
-    refresh_token = intercambiar_codigo_por_token(code)
+def auth_google_callback(code: str):
+    refresh_token, email = intercambiar_codigo_por_token_y_email(code)
 
-    guardar_refresh_token_cliente(cliente_id, refresh_token)
+    # Busca al cliente por email, o lo crea si es la primera vez
+    cliente_id = obtener_o_crear_cliente(email)
 
-    return RedirectResponse(f"https://mibookeo.es/creador.html?drive_ok=1&cliente_id={cliente_id}")
+    # Guarda el refresh_token (y el email de Drive) en su fila
+    guardar_refresh_token_cliente(cliente_id, refresh_token, email=email)
+
+    # Redirige de vuelta al creador.html con el cliente_id ya listo
+    return RedirectResponse(
+        f"https://mibookeo.es/creador.html?drive_ok=1&cliente_id={cliente_id}"
+    )
 
 
 # ═══════════════════════════════════════════════════════
@@ -136,6 +143,7 @@ async def crear_pedido(
             videos_rutas.append(str(dest))
 
         # 3. Subir cada vídeo al Drive DEL CLIENTE (carpeta principal + subcarpeta del pedido)
+        #    Las fotos NO se suben a Drive, solo se usan para generar el PDF.
         qr_urls = {}
         for ruta_video in videos_rutas:
             nombre_archivo = Path(ruta_video).name
