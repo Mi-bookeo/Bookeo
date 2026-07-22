@@ -1,16 +1,15 @@
 """
 Bookeo · subir_drive.py
 Gestiona la subida de vídeos al Google Drive del CLIENTE (no el tuyo):
-crea (o reutiliza) la carpeta "Mibookeo (NO BORRAR)" dentro de SU Drive,
-sube el vídeo, la hace pública y devuelve la URL para el QR.
+
+Estructura de carpetas en el Drive del cliente:
+  Mibookeo (NO BORRAR)/       ← una sola vez por cliente, se reutiliza siempre
+    └── [Título del álbum]/   ← una subcarpeta nueva por cada pedido
 
 Cada cliente autoriza su propia cuenta mediante el flujo OAuth
-(ver google_auth.py). El refresh_token de cada cliente se guarda en
-Supabase y se pasa aquí como parámetro — nunca se usa un token fijo.
-
-Se llama tanto desde el flujo inicial de subida (endpoint /crear-pedido)
-como desde el visor Fabric.js cuando el cliente añade un vídeo nuevo
-(endpoint /viewer/add-video, pendiente de crear). Misma función.
+(ver google_auth.py). El refresh_token y la carpeta principal se
+guardan en Supabase (tabla 'clientes'); la subcarpeta de cada pedido
+se guarda en Supabase (tabla 'pedidos').
 
 REQUIERE:
   pip install google-api-python-client google-auth google-auth-oauthlib
@@ -23,16 +22,17 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
 
-# ═══════════════════════════════════════════════════════
-#  CONFIGURACIÓN — credenciales de la app (variables de Railway)
-#  Estas identifican a TU APLICACIÓN Bookeo, no a un usuario.
-#  El refresh_token de cada cliente se recibe como parámetro.
-# ═══════════════════════════════════════════════════════
+from supabase_client import (
+    obtener_cliente_drive,
+    guardar_carpeta_principal_cliente,
+    obtener_subcarpeta_pedido,
+    guardar_subcarpeta_pedido,
+)
 
 GOOGLE_CLIENTES_CLIENT_ID     = os.environ.get("GOOGLE_CLIENTES_CLIENT_ID", "")
 GOOGLE_CLIENTES_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENTES_CLIENT_SECRET", "")
 
-NOMBRE_CARPETA = "Mibookeo (NO BORRAR)"
+NOMBRE_CARPETA_PRINCIPAL = "Mibookeo (NO BORRAR)"
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
 
@@ -45,11 +45,6 @@ def log(msg, e="→"):
 # ═══════════════════════════════════════════════════════
 
 def obtener_servicio_drive(refresh_token_cliente):
-    """
-    Crea el cliente autenticado de Google Drive usando el refresh_token
-    del CLIENTE (obtenido tras su login OAuth), para operar sobre SU
-    Drive, no el tuyo.
-    """
     creds = Credentials(
         token=None,
         refresh_token=refresh_token_cliente,
@@ -63,62 +58,89 @@ def obtener_servicio_drive(refresh_token_cliente):
 
 
 # ═══════════════════════════════════════════════════════
-#  CARPETA DEL CLIENTE — crear o reutilizar
-# ═══════════════════════════════════════════════════════
-
-def obtener_o_crear_carpeta(service, pedido_id, carpeta_id_existente=None):
-    """
-    Devuelve el ID de la carpeta dentro del Drive del cliente.
-    Si ya existe (guardado en Supabase, tabla 'pedidos'), la reutiliza.
-    Si no existe, la crea y hay que guardar el ID devuelto en Supabase
-    para que las siguientes subidas (desde el visor) usen la misma.
-    """
-    if carpeta_id_existente:
-        try:
-            service.files().get(fileId=carpeta_id_existente, fields="id").execute()
-            log(f"Carpeta existente reutilizada: {carpeta_id_existente}", "📁")
-            return carpeta_id_existente
-        except HttpError:
-            log("Carpeta guardada no encontrada, se creará una nueva", "⚠")
-
-    metadata = {
-        "name": NOMBRE_CARPETA,
-        "mimeType": "application/vnd.google-apps.folder",
-    }
-    carpeta = service.files().create(body=metadata, fields="id").execute()
-    carpeta_id = carpeta["id"]
-
-    hacer_publico(service, carpeta_id)
-
-    log(f"Carpeta creada y pública en Drive del cliente: {carpeta_id} (pedido {pedido_id})", "✅")
-    return carpeta_id
-
-
-# ═══════════════════════════════════════════════════════
 #  PERMISOS — "cualquiera con el enlace puede ver"
 # ═══════════════════════════════════════════════════════
 
 def hacer_publico(service, file_id):
-    """
-    Aplica el permiso público a una carpeta o archivo.
-    type='anyone', role='reader' → cualquiera con el enlace puede verlo,
-    sin necesidad de iniciar sesión en Google.
-    """
     permiso = {"type": "anyone", "role": "reader"}
     service.permissions().create(fileId=file_id, body=permiso).execute()
     log(f"Permiso público aplicado a {file_id}", "🔓")
 
 
 # ═══════════════════════════════════════════════════════
+#  CARPETA PRINCIPAL — una sola vez por cliente, se reutiliza
+# ═══════════════════════════════════════════════════════
+
+def obtener_o_crear_carpeta_principal(service, cliente_id):
+    """
+    Busca en Supabase si este cliente ya tiene la carpeta principal
+    'Mibookeo (NO BORRAR)'. Si existe, la reutiliza. Si no, la crea
+    una única vez y guarda su ID en la tabla 'clientes'.
+    """
+    datos_cliente = obtener_cliente_drive(cliente_id)
+    carpeta_id = datos_cliente.get("carpeta_drive_id") if datos_cliente else None
+
+    if carpeta_id:
+        try:
+            service.files().get(fileId=carpeta_id, fields="id").execute()
+            log(f"Carpeta principal reutilizada: {carpeta_id}", "📁")
+            return carpeta_id
+        except HttpError:
+            log("Carpeta principal guardada no encontrada, se creará una nueva", "⚠")
+
+    metadata = {
+        "name": NOMBRE_CARPETA_PRINCIPAL,
+        "mimeType": "application/vnd.google-apps.folder",
+    }
+    carpeta = service.files().create(body=metadata, fields="id").execute()
+    carpeta_id = carpeta["id"]
+    hacer_publico(service, carpeta_id)
+    guardar_carpeta_principal_cliente(cliente_id, carpeta_id)
+
+    log(f"Carpeta principal creada para cliente {cliente_id}: {carpeta_id}", "✅")
+    return carpeta_id
+
+
+# ═══════════════════════════════════════════════════════
+#  SUBCARPETA DEL PEDIDO — una nueva por cada álbum
+# ═══════════════════════════════════════════════════════
+
+def obtener_o_crear_subcarpeta_pedido(service, carpeta_principal_id, pedido_id, nombre_album):
+    """
+    Busca si este pedido concreto ya tiene su subcarpeta creada.
+    Si no, la crea dentro de la carpeta principal, usando el título
+    del álbum como nombre.
+    """
+    subcarpeta_id = obtener_subcarpeta_pedido(pedido_id)
+
+    if subcarpeta_id:
+        try:
+            service.files().get(fileId=subcarpeta_id, fields="id").execute()
+            log(f"Subcarpeta del pedido reutilizada: {subcarpeta_id}", "📁")
+            return subcarpeta_id
+        except HttpError:
+            log("Subcarpeta guardada no encontrada, se creará una nueva", "⚠")
+
+    metadata = {
+        "name": nombre_album or f"Pedido {pedido_id}",
+        "mimeType": "application/vnd.google-apps.folder",
+        "parents": [carpeta_principal_id],
+    }
+    subcarpeta = service.files().create(body=metadata, fields="id").execute()
+    subcarpeta_id = subcarpeta["id"]
+    hacer_publico(service, subcarpeta_id)
+    guardar_subcarpeta_pedido(pedido_id, subcarpeta_id)
+
+    log(f"Subcarpeta creada para pedido {pedido_id}: {subcarpeta_id}", "✅")
+    return subcarpeta_id
+
+
+# ═══════════════════════════════════════════════════════
 #  SUBIR VÍDEO
 # ═══════════════════════════════════════════════════════
 
-def subir_video(service, ruta_local, nombre_archivo, carpeta_id):
-    """
-    Sube el vídeo a la carpeta dentro del Drive del cliente
-    y devuelve la URL pública.
-    """
-    metadata = {"name": nombre_archivo, "parents": [carpeta_id]}
+def subir_video(service, ruta_local, nombre_archivo, subcarpeta_id):
+    metadata = {"name": nombre_archivo, "parents": [subcarpeta_id]}
     media = MediaFileUpload(ruta_local, resumable=True)
 
     archivo = service.files().create(
@@ -126,40 +148,35 @@ def subir_video(service, ruta_local, nombre_archivo, carpeta_id):
     ).execute()
 
     file_id = archivo["id"]
-    # El archivo hereda el permiso público de la carpeta, pero por seguridad
-    # lo confirmamos también a nivel de archivo individual.
     hacer_publico(service, file_id)
 
     url = archivo.get("webViewLink") or f"https://drive.google.com/file/d/{file_id}/view"
-    log(f"Vídeo subido al Drive del cliente: {nombre_archivo} → {url}", "🎬")
+    log(f"Vídeo subido: {nombre_archivo} → {url}", "🎬")
     return url, file_id
 
 
 # ═══════════════════════════════════════════════════════
 #  FUNCIÓN PRINCIPAL — llamada por el backend FastAPI
-#  Úsala tanto en /crear-pedido (subida inicial) como en
-#  /viewer/add-video (cuando el cliente añade un vídeo en Fabric.js)
 # ═══════════════════════════════════════════════════════
 
-def procesar_video(ruta_local, nombre_archivo, pedido_id, refresh_token_cliente, carpeta_id_existente=None):
+def procesar_video(ruta_local, nombre_archivo, cliente_id, pedido_id,
+                    refresh_token_cliente, nombre_album=None):
     """
-    Punto de entrada único para subir un vídeo al Drive DEL CLIENTE
-    y generar su URL de QR.
+    Punto de entrada único para subir un vídeo.
 
     ruta_local            → ruta temporal del vídeo ya guardado en disco
     nombre_archivo        → nombre del archivo (para Drive)
-    pedido_id             → ID del pedido/cliente (para logs y trazabilidad)
-    refresh_token_cliente → token OAuth del cliente, obtenido tras su login
-                            (recuperado de Supabase, tabla 'pedidos')
-    carpeta_id_existente  → ID de carpeta ya creada para este pedido
-                            (recupéralo de Supabase si el cliente ya subió
-                            vídeos antes; si es None, se crea una nueva)
+    cliente_id            → ID del cliente en Supabase (para la carpeta principal)
+    pedido_id             → ID del pedido en Supabase (para la subcarpeta)
+    refresh_token_cliente → token OAuth del cliente
+    nombre_album          → título del álbum, usado como nombre de la subcarpeta
 
-    Devuelve: (url_publica, file_id, carpeta_id)
-    IMPORTANTE: guarda carpeta_id en Supabase (tabla 'pedidos') la primera
-    vez, para que futuras llamadas reutilicen la misma carpeta.
+    Devuelve: (url_publica, file_id)
     """
     service = obtener_servicio_drive(refresh_token_cliente)
-    carpeta_id = obtener_o_crear_carpeta(service, pedido_id, carpeta_id_existente)
-    url, file_id = subir_video(service, ruta_local, nombre_archivo, carpeta_id)
-    return url, file_id, carpeta_id
+    carpeta_principal_id = obtener_o_crear_carpeta_principal(service, cliente_id)
+    subcarpeta_id = obtener_o_crear_subcarpeta_pedido(
+        service, carpeta_principal_id, pedido_id, nombre_album
+    )
+    url, file_id = subir_video(service, ruta_local, nombre_archivo, subcarpeta_id)
+    return url, file_id
