@@ -34,7 +34,7 @@ from moviepy.editor import (
 from subir_drive import procesar_video
 from google_auth import generar_url_autorizacion, intercambiar_codigo_por_token_y_email
 from crear_libro_railway import generar_propuestas_portada, generar_pdf_completo
-from supabase_client import obtener_o_crear_cliente, guardar_refresh_token_cliente
+from supabase_client import obtener_o_crear_cliente, guardar_refresh_token_cliente, obtener_cliente_drive
 
 app = FastAPI(title="Bookeo Backend", version="1.0.0")
 
@@ -47,8 +47,6 @@ app.add_middleware(
 )
 
 # ── Caché en memoria de pedidos en proceso (entre /propuestas y /confirmar) ──
-# NOTA: se pierde si Railway reinicia el servicio. Suficiente para el MVP;
-# más adelante se puede persistir en Supabase si hace falta.
 PEDIDOS_EN_PROCESO: dict = {}
 
 # ── Carpeta de músicas automáticas (súbelas a /music/ en Railway) ──
@@ -123,8 +121,17 @@ async def crear_pedido_propuestas(
     nombre_cliente: str = Form(...),
     cliente_id: str = Form(...),
     pedido_id: str = Form(...),
-    google_refresh_token: str = Form(...),
 ):
+    # Recuperar el refresh_token del cliente desde Supabase.
+    # El frontend nunca maneja este dato — solo conoce cliente_id.
+    datos_drive = obtener_cliente_drive(cliente_id)
+    if not datos_drive or not datos_drive.get("google_refresh_token"):
+        raise HTTPException(
+            status_code=400,
+            detail="No se encontró la conexión de Google Drive para este cliente. Conecta Drive de nuevo."
+        )
+    google_refresh_token = datos_drive["google_refresh_token"]
+
     work_dir = Path(tempfile.mkdtemp(prefix=f"bookeo_pedido_{pedido_id}_"))
     carpeta_temp = work_dir / "temp"
     carpeta_temp.mkdir(exist_ok=True)
@@ -194,7 +201,7 @@ async def crear_pedido_propuestas(
 @app.post("/crear-pedido/confirmar")
 async def crear_pedido_confirmar(
     pedido_id: str = Form(...),
-    portada_foto: Optional[str] = Form(None),   # nombre de archivo, o vacío si es portada en blanco
+    portada_foto: Optional[str] = Form(None),
     portada_titulo: Optional[str] = Form(None),
     portada_subtitulo: Optional[str] = Form(None),
 ):
@@ -223,7 +230,6 @@ async def crear_pedido_confirmar(
             carpeta_temp=datos["carpeta_temp"],
         )
 
-        # Ya no hace falta mantenerlo en caché
         del PEDIDOS_EN_PROCESO[pedido_id]
 
         return {"ok": True, "pdf": ruta_pdf}
