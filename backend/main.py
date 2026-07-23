@@ -91,7 +91,7 @@ def auth_google_iniciar():
 
 
 @app.get("/auth/google/callback")
-def auth_google_callback(code: str = None, error: str = None, **kwargs):
+def auth_google_callback(code: str = None, error: str = None):
     if error:
         return {"ok": False, "error": f"Google devolvió un error: {error}"}
     if not code:
