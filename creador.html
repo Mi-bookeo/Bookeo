@@ -477,9 +477,9 @@ main > *:nth-child(7){animation-delay:.35s;}
     <div class="section-label">Formato del álbum</div>
 
     <div class="format-grid">
-      <div class="format-btn" id="fmt-2121" onclick="selectFormat('2121')">
+      <div class="format-btn" id="fmt-2020" onclick="selectFormat('2020')">
         <span class="format-icon">📗</span>
-        <span class="format-name">21 × 21</span>
+        <span class="format-name">20 × 20</span>
         <span class="format-desc">Cuadrado · 26,90€</span>
       </div>
       <div class="format-btn selected" id="fmt-2128" onclick="selectFormat('2128')">
@@ -721,7 +721,7 @@ function marcarDriveConectado() {
 }
 
 function selectFormat(fmt) {
-  ['2121','2128','2828'].forEach(f => {
+  ['2020','2128','2828'].forEach(f => {
     document.getElementById(`fmt-${f}`).classList.toggle('selected', f === fmt);
   });
   selectedFormat = fmt;
