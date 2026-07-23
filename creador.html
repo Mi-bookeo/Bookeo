@@ -792,7 +792,6 @@ async function generate() {
   formData.append('nombre_cliente', titulo);
   formData.append('cliente_id', clienteId);
   formData.append('pedido_id', pedidoId);
-  formData.append('google_refresh_token', googleRefreshToken || '');
 
   try {
     const resp = await fetch(`${API_BASE}/crear-pedido/propuestas`, {
