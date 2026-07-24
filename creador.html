@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookeo · Crear mi álbum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g:    #7db898;
+  --g2:   #5a9a7a;
+  --g3:   #e8f5ee;
+  --g4:   #f0faf5;
+  --dark: #1a1a2e;
+  --text: #2e2e3a;
+  --muted:#7a7a8a;
+  --border:#e2dfd8;
+  --cream:#faf8f3;
+  --gold: #c9a84c;
+  --white:#ffffff;
+  --shadow: 0 4px 24px rgba(0,0,0,0.07);
+  --shadow-md: 0 8px 40px rgba(0,0,0,0.11);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--cream);
+  color:var(--text);
+  min-height:100vh;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(253,252,248,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(125,184,152,0.2);
+  padding: 0 5%;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: box-shadow .3s;
+}
+nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.nav-logo img { height: 48px; width: auto; display: block; }
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  text-decoration: none;
+  color: var(--charcoal-light);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--green-dark); }
+
+.nav-cta {
+  background: var(--green);
+  color: white;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .25s;
+  white-space: nowrap;
+}
+.nav-cta:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(125,184,152,0.4); }
+.nav-back-link {
+  color: var(--green-dark, #5a9a7a);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color .2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.nav-back-link:hover { color: var(--green, #7db898); }
+
+
+/* ── PROGRESS ── */
+.progress{
+  background:var(--dark);
+  padding:10px 5%;
+  display:flex;
+  align-items:center;
+  gap:0;
+  border-bottom:1px solid rgba(201,168,76,0.2);
+}
+.step{
+  display:flex;align-items:center;gap:7px;
+  font-size:0.73rem;color:rgba(255,255,255,0.3);
+  padding:0 14px;
+}
+.step.done{color:rgba(255,255,255,0.5);}
+.step.active{color:var(--g);}
+.step-dot{
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(125,184,152,0.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;font-weight:700;
+}
+.step.active .step-dot{background:var(--g);color:white;}
+.step.done .step-dot{background:rgba(255,255,255,0.25);color:var(--dark);}
+.step-sep{color:rgba(255,255,255,0.12);font-size:0.9rem;padding:0 2px;}
+
+/* ── MAIN ── */
+main{
+  max-width:680px;
+  margin:0 auto;
+  padding:40px 20px 100px;
+}
+
+h1{
+  font-family:'Lora',serif;
+  font-size:1.6rem;
+  color:var(--dark);
+  margin-bottom:6px;
+  line-height:1.25;
+}
+h1 em{font-style:italic;color:var(--g2);}
+.page-sub{
+  color:var(--muted);font-size:0.85rem;
+  margin-bottom:36px;line-height:1.6;
+}
+
+/* ── SECTION CARD ── */
+.card{
+  background:var(--white);
+  border-radius:18px;
+  padding:24px 26px;
+  margin-bottom:16px;
+  border:1.5px solid var(--border);
+  box-shadow:var(--shadow);
+  transition:border-color .25s;
+}
+.card:focus-within{border-color:var(--g);}
+
+.section-label{
+  font-size:0.68rem;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:7px;
+}
+.section-label::before{
+  content:'';width:3px;height:12px;
+  background:var(--g);border-radius:2px;
+}
+
+/* ── FORMAT SELECTOR ── */
+.format-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:0;
+}
+.format-btn{
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  padding:14px 10px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .22s;
+  background:var(--white);
+  position:relative;
+}
+.format-btn:hover{border-color:var(--g);background:var(--g4);}
+.format-btn.selected{
+  border-color:var(--g);
+  background:var(--g3);
+  box-shadow:0 0 0 3px rgba(125,184,152,0.18);
+}
+.format-btn.selected::after{
+  content:'✓';
+  position:absolute;top:7px;right:9px;
+  font-size:0.7rem;font-weight:800;
+  color:var(--g2);
+}
+.format-icon{
+  font-size:1.6rem;margin-bottom:6px;
+  display:block;
+}
+.format-name{
+  font-size:0.82rem;font-weight:700;
+  color:var(--text);display:block;
+}
+.format-desc{
+  font-size:0.68rem;color:var(--muted);
+  margin-top:2px;display:block;
+}
+
+/* Orientación — solo 21x28 */
+.orientation-row{
+  display:none;
+  gap:10px;
+  margin-top:12px;
+  animation:fadeUp .3s ease both;
+}
+.orientation-row.show{display:flex;}
+.ori-btn{
+  flex:1;padding:10px;border-radius:10px;
+  border:1.5px solid var(--border);
+  background:var(--white);cursor:pointer;
+  font-size:0.8rem;font-weight:600;
+  color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all .2s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.ori-btn:hover{border-color:var(--g);color:var(--g2);}
+.ori-btn.selected{
+  border-color:var(--g);
+  background:var(--g3);
+  color:var(--g2);font-weight:700;
+}
+
+/* ── DRIVE ── */
+.drive-row{
+  display:flex;align-items:flex-start;gap:16px;
+  flex-wrap:wrap;
+}
+.drive-cta{
+  display:inline-flex;align-items:center;gap:9px;
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:50px;
+  padding:11px 20px;
+  font-size:0.85rem;font-weight:600;
+  cursor:pointer;
+  transition:all .25s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  white-space:nowrap;
+  color:var(--text);
+}
+.drive-cta:hover{border-color:var(--g);box-shadow:0 0 0 3px rgba(125,184,152,0.15);}
+.drive-cta.connected{
+  background:var(--g3);border-color:var(--g);color:var(--g2);
+}
+.drive-info{flex:1;min-width:200px;}
+.drive-info p{font-size:0.78rem;color:var(--muted);line-height:1.55;}
+.drive-note{
+  font-size:0.7rem;color:var(--muted);
+  margin-top:10px;
+  background:var(--g4);
+  border-radius:8px;padding:8px 12px;
+  line-height:1.55;
+}
+.drive-note strong{color:var(--text);}
+.drive-status{
+  display:none;margin-top:10px;
+  align-items:center;gap:7px;
+  font-size:0.78rem;color:var(--g2);font-weight:600;
+  background:var(--g3);border-radius:8px;padding:9px 12px;
+}
+.drive-status.show{display:flex;}
+.pulse{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--g);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.4);}}
+
+/* ── UPLOAD ZONE ── */
+.upload-zone{
+  border:2px dashed var(--border);
+  border-radius:14px;
+  padding:36px 20px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .3s;
+  position:relative;
+  background:#fdfcf9;
+}
+.upload-zone:hover{border-color:var(--g);background:var(--g4);}
+.upload-zone.loaded{border-style:solid;border-color:var(--g);background:var(--g4);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-icon-wrap{
+  width:60px;height:60px;margin:0 auto 14px;
+  background:var(--g3);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .25s;
+}
+.upload-zone:hover .upload-icon-wrap{transform:scale(1.06);}
+.upload-zone h3{font-size:0.95rem;color:var(--dark);margin-bottom:5px;}
+.upload-zone p{font-size:0.78rem;color:var(--muted);line-height:1.55;}
+.type-pills{
+  display:flex;flex-wrap:wrap;justify-content:center;
+  gap:6px;margin-top:12px;
+}
+.pill{
+  background:rgba(125,184,152,0.12);
+  color:var(--g2);border-radius:20px;
+  padding:3px 10px;font-size:0.68rem;font-weight:600;
+}
+.file-count{
+  display:none;margin-top:14px;
+  background:var(--dark);color:white;
+  border-radius:8px;padding:10px 14px;
+  font-size:0.8rem;line-height:1.5;
+}
+.file-count.show{display:block;}
+.file-count strong{color:var(--g);}
+
+/* ── TITLE FIELD ── */
+.title-field{
+  width:100%;
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:0.92rem;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  color:var(--text);
+  background:var(--white);
+  outline:none;
+  transition:border-color .2s;
+}
+.title-field:focus{border-color:var(--g);}
+.title-hint{
+  display:flex;justify-content:space-between;
+  margin-top:6px;
+  font-size:0.7rem;color:var(--muted);
+}
+.title-note{
+  font-size:0.72rem;color:var(--muted);
+  margin-top:8px;
+  display:flex;align-items:flex-start;gap:5px;
+  line-height:1.5;
+}
+.title-note::before{content:'📚';font-size:0.85rem;}
+
+/* ── VIDEO MERGE BTN ── */
+.video-merge-btn{
+  width:100%;
+  padding:15px 20px;
+  border-radius:14px;
+  border:1.5px dashed var(--border);
+  background:var(--white);
+  cursor:pointer;
+  transition:all .25s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  display:flex;align-items:center;gap:14px;
+  text-align:left;
+}
+.video-merge-btn:hover{
+  border-color:var(--g);
+  background:var(--g4);
+  border-style:solid;
+}
+.vmb-icon{
+  width:44px;height:44px;min-width:44px;
+  background:var(--g3);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;
+  transition:transform .2s;
+}
+.video-merge-btn:hover .vmb-icon{transform:scale(1.08);}
+.vmb-text h4{font-size:0.9rem;color:var(--dark);margin-bottom:2px;}
+.vmb-text p{font-size:0.75rem;color:var(--muted);line-height:1.45;}
+.vmb-arrow{
+  margin-left:auto;
+  color:var(--muted);font-size:1.1rem;
+  transition:transform .2s;
+}
+.video-merge-btn:hover .vmb-arrow{transform:translateX(3px);color:var(--g2);}
+
+/* ── GENERATE BTN ── */
+.generate-wrap{
+  margin-top:28px;
+  text-align:center;
+}
+.generate-btn{
+  width:100%;
+  padding:18px 30px;
+  background:var(--g);
+  color:white;border:none;
+  border-radius:50px;
+  font-size:1.05rem;font-weight:700;
+  cursor:pointer;
+  transition:all .3s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 6px 24px rgba(125,184,152,0.4);
+  letter-spacing:.01em;
+}
+.generate-btn:hover{
+  background:var(--g2);
+  transform:translateY(-2px);
+  box-shadow:0 10px 32px rgba(125,184,152,0.45);
+}
+.generate-btn:disabled{
+  opacity:.45;cursor:not-allowed;
+  transform:none;box-shadow:none;
+}
+.generate-note{
+  font-size:0.73rem;color:var(--muted);
+  margin-top:10px;line-height:1.5;
+}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:var(--dark);color:white;
+  border:1px solid var(--g);
+  border-radius:50px;
+  padding:11px 22px;font-size:0.82rem;
+  transition:transform .35s cubic-bezier(.175,.885,.32,1.275);
+  z-index:200;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(14px);}
+  to{opacity:1;transform:none;}
+}
+main > *{animation:fadeUp .5s ease both;}
+main > *:nth-child(1){animation-delay:.05s;}
+main > *:nth-child(2){animation-delay:.1s;}
+main > *:nth-child(3){animation-delay:.15s;}
+main > *:nth-child(4){animation-delay:.2s;}
+main > *:nth-child(5){animation-delay:.25s;}
+main > *:nth-child(6){animation-delay:.3s;}
+main > *:nth-child(7){animation-delay:.35s;}
+
+@media(max-width:560px){
+  main{padding:28px 14px 80px;}
+  h1{font-size:1.3rem;}
+  .format-icon{font-size:1.3rem;}
+  .progress .step span{display:none;}
+}
+</style>
+</head>
+<body>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-logo"><img src="data:image/png;base64,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" alt="Bookeo" style="height:48px;width:auto;display:block;"></a>
+  <a href="index.html" class="nav-back-link">← Volver al inicio</a>
+</nav>
+
+<div class="progress">
+  <div class="step done"><div class="step-dot">✓</div><span>Inicio</span></div>
+  <div class="step-sep">›</div>
+  <div class="step active"><div class="step-dot">2</div><span>Crear álbum</span></div>
+  <div class="step-sep">›</div>
+  <div class="step"><div class="step-dot">3</div><span>Revisar</span></div>
+  <div class="step-sep">›</div>
+  <div class="step"><div class="step-dot">4</div><span>Pagar</span></div>
+</div>
+
+<main>
+
+  <h1 style="text-align:center">Crea tu <em>álbum de fotos</em></h1>
+  <p class="page-sub" style="text-align:center">Sube tus fotos y vídeos · la IA diseña el libro en ~4 minutos · tú solo revisas y apruebas</p>
+
+  <!-- 1. FORMATO -->
+  <div class="card">
+    <div class="section-label">Formato del álbum</div>
+
+    <div class="format-grid">
+      <div class="format-btn" id="fmt-2020" onclick="selectFormat('2020')">
+        <span class="format-icon">📗</span>
+        <span class="format-name">20 × 20</span>
+        <span class="format-desc">Cuadrado · 26,90€</span>
+      </div>
+      <div class="format-btn selected" id="fmt-2128" onclick="selectFormat('2128')">
+        <span class="format-icon">📘</span>
+        <span class="format-name">21 × 28</span>
+        <span class="format-desc">Rectangular · 32,60€</span>
+      </div>
+      <div class="format-btn" id="fmt-2828" onclick="selectFormat('2828')">
+        <span class="format-icon">📕</span>
+        <span class="format-name">28 × 28</span>
+        <span class="format-desc">Grande · 46,50€</span>
+      </div>
+    </div>
+
+    <!-- Orientación — solo visible para 21x28 -->
+    <div class="orientation-row show" id="oriRow">
+      <button class="ori-btn selected" id="ori-v" onclick="selectOri('v')">
+        <span>📱</span> Vertical
+      </button>
+      <button class="ori-btn" id="ori-h" onclick="selectOri('h')">
+        <span>🖼</span> Horizontal
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. GOOGLE DRIVE -->
+  <div class="card">
+    <div class="section-label">Conecta tu Google Drive*</div>
+    <div class="drive-row">
+      <button class="drive-cta" id="driveBtn" onclick="connectDrive()">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path d="M4.433 22l-2.433-4.231 7.637-13.238 2.433 4.231L4.433 22z" fill="#0066DA"/>
+          <path d="M15.567 22H4.433l2.433-4H18l-2.433 4z" fill="#00AC47"/>
+          <path d="M18 18H6.866L14.363 4.769 21.567 18H18z" fill="#EA4335"/>
+        </svg>
+        Conectar Google Drive
+      </button>
+      <div class="drive-info">
+        <p>Tus vídeos se guardarán en tu Drive en una carpeta llamada <strong>Mibookeo</strong>.</p>
+        <div class="drive-note">
+          * <strong>Solo creamos la carpeta Mibookeo.</strong> No tenemos acceso a ningún otro archivo ni carpeta de tu Google Drive.
+        </div>
+      </div>
+    </div>
+    <div class="drive-status" id="driveStatus">
+      <div class="pulse"></div>
+      <span>Drive conectado · <strong id="driveEmail">usuario@gmail.com</strong> · carpeta Mibookeo lista ✓</span>
+    </div>
+  </div>
+
+  <!-- 3. SUBIR FOTOS Y VÍDEOS -->
+  <div class="card">
+    <div class="section-label">Sube tus fotos y vídeos</div>
+    <div class="upload-zone" id="uploadZone" onclick="simulateUpload()">
+      <input type="file" multiple accept="image/*,video/*" style="pointer-events:none">
+      <div class="upload-icon-wrap">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7db898" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <h3 id="uploadTitle">Arrastra aquí o toca para seleccionar</h3>
+      <p id="uploadDesc">Selecciona fotos y vídeos a la vez · el sistema los separa automáticamente</p>
+      <div class="type-pills">
+        <span class="pill">📷 JPG</span>
+        <span class="pill">📷 PNG</span>
+        <span class="pill">📷 HEIC</span>
+        <span class="pill">🎬 MP4</span>
+        <span class="pill">🎬 MOV</span>
+      </div>
+    </div>
+    <div class="file-count" id="fileCount">
+      <strong id="photoCount">0 fotos</strong> ordenadas por fecha EXIF ·
+      <strong id="videoCount">0 vídeos</strong> → se subirán a tu Drive automáticamente
+    </div>
+  </div>
+
+  <!-- 4. TÍTULO DEL ÁLBUM -->
+  <div class="card">
+    <div class="section-label">Título de tu álbum</div>
+    <input
+      type="text"
+      class="title-field"
+      id="titleField"
+      placeholder="Ej: Verano en familia 2024"
+      maxlength="30"
+      oninput="updateCount()"
+    >
+    <div class="title-hint">
+      <span>Aparecerá en la portada del libro</span>
+      <span id="charCount">0 / 30</span>
+    </div>
+    <div class="title-note">
+      Este título también se usará en el lomo del libro para que puedas identificarlo en la estantería.
+    </div>
+  </div>
+
+  <!-- 5. UNIR VÍDEOS -->
+  <div class="card">
+    <div class="section-label">Unir vídeos <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.65rem;color:var(--muted)">(opcional)</span></div>
+
+    <!-- ======================================================== -->
+    <!-- DESARROLLADOR: Cambia el href por la URL o archivo HTML  -->
+    <!-- de tu página unificadora de vídeos                        -->
+    <!-- Ejemplo: href="bookeo_unir_videos.html"                  -->
+    <!--          href="https://mibookeo.es/unir-videos"          -->
+    <!-- ======================================================== -->
+    <!-- ⚠️ DESARROLLADOR: cambia href por "unir-videos.html" o la URL de producción -->
+    <a href="unir_videos.html" style="text-decoration:none;display:block;">
+      <button style="width:100%;padding:14px 20px;background:var(--dark);color:white;border:none;border-radius:50px;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .25s;box-shadow:0 4px 16px rgba(26,26,46,0.2);">
+        <span>🎬</span> Unir vídeos
+      </button>
+    </a>
+  </div>
+
+  <!-- 6. GENERAR -->
+  <div class="generate-wrap">
+    <button class="generate-btn" id="generateBtn" disabled onclick="generate()">
+      <span>✦</span>
+      Generar mi álbum 
+    </button>
+   <p class="generate-note">* Necesitas conectar Google Drive y subir al menos 2 fotos para continuar</p> 
+  </div>
+
+</main>
+<!-- ═══ MODAL: TIPO DE ÁLBUM ═══ -->
+<div id="modalTipo" style="display:none;position:fixed;inset:0;background:rgba(26,26,46,0.6);z-index:300;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:18px;padding:28px 24px;max-width:400px;width:100%;">
+    <h3 style="font-family:'Lora',serif;font-size:1.2rem;margin-bottom:14px;" id="modalTipoTitulo">¿Cómo quieres organizar tu libro?</h3>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="ori-btn" id="modalOpcionA" onclick="elegirOrganizacion('A')" style="padding:14px;text-align:left;"></button>
+      <button class="ori-btn" id="modalOpcionB" onclick="elegirOrganizacion('B')" style="padding:14px;text-align:left;"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANTALLA: CARGANDO PROPUESTAS ═══ -->
+<div id="pantallaCargando" style="display:none;position:fixed;inset:0;background:var(--cream);z-index:250;align-items:center;justify-content:center;flex-direction:column;gap:18px;">
+  <div style="width:48px;height:48px;border:4px solid var(--g3);border-top-color:var(--g);border-radius:50%;animation:girar 1s linear infinite;"></div>
+  <p style="color:var(--muted);font-size:0.9rem;" id="textoCargando">Analizando tus fotos...</p>
+</div>
+<style>@keyframes girar{to{transform:rotate(360deg);}}</style>
+
+<!-- ═══ PANTALLA: SELECCIÓN DE PORTADA ═══ -->
+<div id="pantallaPortadas" style="display:none;position:fixed;inset:0;background:var(--cream);z-index:250;overflow-y:auto;padding:30px 16px;">
+  <h2 style="font-family:'Lora',serif;text-align:center;margin-bottom:6px;">Elige tu portada</h2>
+  <p style="text-align:center;color:var(--muted);font-size:0.85rem;margin-bottom:24px;">Puedes personalizar el título después</p>
+  <div id="listaPortadas" style="display:flex;flex-direction:column;gap:14px;max-width:420px;margin:0 auto;"></div>
+</div>
+
+<!-- ═══ PANTALLA: EDITAR PORTADA ═══ -->
+<div id="pantallaEditarPortada" style="display:none;position:fixed;inset:0;background:var(--cream);z-index:250;overflow-y:auto;padding:30px 16px;">
+  <h2 style="font-family:'Lora',serif;text-align:center;margin-bottom:20px;">Personaliza tu portada</h2>
+  <div style="max-width:420px;margin:0 auto;">
+    <div class="card">
+      <div class="section-label">Título</div>
+      <input type="text" class="title-field" id="editTitulo" maxlength="40">
+    </div>
+    <div class="card">
+      <div class="section-label">Subtítulo</div>
+      <input type="text" class="title-field" id="editSubtitulo" maxlength="60">
+    </div>
+    <button class="generate-btn" onclick="confirmarPortada()">✦ Confirmar y crear mi álbum</button>
+  </div>
+</div>
+
+<!-- ═══ PANTALLA: GENERANDO PDF FINAL ═══ -->
+<div id="pantallaGenerando" style="display:none;position:fixed;inset:0;background:var(--cream);z-index:250;align-items:center;justify-content:center;flex-direction:column;gap:18px;">
+  <div style="width:48px;height:48px;border:4px solid var(--g3);border-top-color:var(--g);border-radius:50%;animation:girar 1s linear infinite;"></div>
+  <p style="color:var(--muted);font-size:0.9rem;">Creando tu álbum, esto puede tardar unos minutos...</p>
+</div>
+
+<!-- ═══ PANTALLA: ÉXITO ═══ -->
+<div id="pantallaExito" style="display:none;position:fixed;inset:0;background:var(--cream);z-index:250;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;text-align:center;">
+  <span style="font-size:3rem;">✅</span>
+  <h2 style="font-family:'Lora',serif;">¡Tu álbum está listo!</h2>
+  <p style="color:var(--muted);font-size:0.9rem;" id="textoExito"></p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ ESTADO GLOBAL ═══
+let selectedFormat = '2128';
+let selectedOri    = 'v';
+let driveConnected = false;
+let filesLoaded    = false;
+let clienteId       = null;
+let googleRefreshToken = null;
+let pedidoId        = generarUUID();
+let archivosFotos   = [];
+let archivosVideos  = [];
+let portadaOpciones = [];
+let portadaSeleccionada = null;
+
+const API_BASE = "https://bookeo-production.up.railway.app";
+
+function generarUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random()*16|0, v = c=='x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+if (params.get('drive_ok') === '1' && params.get('cliente_id')) {
+    clienteId = params.get('cliente_id');
+    localStorage.setItem('bookeo_cliente_id', clienteId);
+    const emailReal = params.get('email');
+    if (emailReal) {
+      localStorage.setItem('bookeo_cliente_email', emailReal);
+      document.getElementById('driveEmail').textContent = emailReal;
+    }
+    marcarDriveConectado();  
+    toast('✅ Google Drive conectado correctamente');
+  } else {
+    const guardado = localStorage.getItem('bookeo_cliente_id');
+    if (guardado) {
+      clienteId = guardado;
+      const emailGuardado = localStorage.getItem('bookeo_cliente_email');
+      if (emailGuardado) document.getElementById('driveEmail').textContent = emailGuardado;
+      marcarDriveConectado();
+    }
+}
+
+  const formatoURL = params.get('formato');
+  if (formatoURL) selectFormat(formatoURL);
+  const oriURL = params.get('orientacion') === 'h' ? 'h' : (params.get('orientacion') === 'v' ? 'v' : null);
+  if (oriURL) selectOri(oriURL);
+});
+
+function marcarDriveConectado() {
+  driveConnected = true;
+  const btn = document.getElementById('driveBtn');
+  btn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24">
+      <path d="M4.433 22l-2.433-4.231 7.637-13.238 2.433 4.231L4.433 22z" fill="#0066DA"/>
+      <path d="M15.567 22H4.433l2.433-4H18l-2.433 4z" fill="#00AC47"/>
+      <path d="M18 18H6.866L14.363 4.769 21.567 18H18z" fill="#EA4335"/>
+    </svg>
+    ✓ Conectado`;
+  btn.classList.add('connected');
+  document.getElementById('driveStatus').classList.add('show');
+  checkReady();
+}
+
+function selectFormat(fmt) {
+  ['2020','2128','2828'].forEach(f => {
+    document.getElementById(`fmt-${f}`).classList.toggle('selected', f === fmt);
+  });
+  selectedFormat = fmt;
+  const oriRow = document.getElementById('oriRow');
+  oriRow.classList.toggle('show', fmt === '2128');
+  checkReady();
+}
+
+function selectOri(ori) {
+  selectedOri = ori;
+  document.getElementById('ori-v').classList.toggle('selected', ori === 'v');
+  document.getElementById('ori-h').classList.toggle('selected', ori === 'h');
+}
+
+function connectDrive() {
+  window.location.href = `${API_BASE}/auth/google/iniciar`;
+}
+
+function simulateUpload() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.accept = 'image/*,video/*';
+  input.onchange = (e) => {
+    const archivos = Array.from(e.target.files);
+    archivosFotos = archivos.filter(f => f.type.startsWith('image/'));
+    archivosVideos = archivos.filter(f => f.type.startsWith('video/'));
+    filesLoaded = archivosFotos.length >= 2;
+
+    const zone = document.getElementById('uploadZone');
+    zone.classList.add('loaded');
+    document.getElementById('uploadTitle').textContent = `✅ ${archivos.length} archivos cargados`;
+    document.getElementById('uploadDesc').textContent = `${archivosFotos.length} fotos · ${archivosVideos.length} vídeos detectados`;
+
+    const fc = document.getElementById('fileCount');
+    document.getElementById('photoCount').textContent = `${archivosFotos.length} fotos`;
+    document.getElementById('videoCount').textContent = `${archivosVideos.length} vídeos`;
+    fc.classList.add('show');
+
+    if (!filesLoaded) {
+      toast('⚠️ Necesitas al menos 2 fotos');
+    } else {
+      toast(`📷 ${archivosFotos.length} fotos · 🎬 ${archivosVideos.length} vídeos · todo listo`);
+    }
+    checkReady();
+  };
+  input.click();
+}
+
+function updateCount() {
+  const v = document.getElementById('titleField').value.length;
+  document.getElementById('charCount').textContent = `${v} / 30`;
+  checkReady();
+}
+
+function checkReady() {
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = !(filesLoaded && driveConnected);
+}
+
+async function generate() {
+  if (!clienteId) {
+    toast('⚠️ Conecta Google Drive primero');
+    return;
+  }
+  const titulo = document.getElementById('titleField').value || 'Mi Álbum';
+
+  mostrarPantalla('pantallaCargando');
+
+  const formData = new FormData();
+  archivosFotos.forEach(f => formData.append('fotos', f));
+  archivosVideos.forEach(v => formData.append('videos', v));
+  formData.append('titulo', titulo);
+  formData.append('nombre_cliente', titulo);
+  formData.append('cliente_id', clienteId);
+  formData.append('pedido_id', pedidoId);
+ formData.append('formato', selectedFormat);
+formData.append('orientacion', selectedOri); 
+
+  try {
+    const resp = await fetch(`${API_BASE}/crear-pedido/propuestas`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || !data.ok) {
+      throw new Error(data.detail || data.error || 'Error generando propuestas');
+    }
+
+    portadaOpciones = data.portada_opciones || [];
+
+    if (data.tipo === 'viaje' || data.tipo === 'anual') {
+      mostrarModalTipo(data.tipo);
+    } else {
+      mostrarPortadas();
+    }
+
+  } catch (err) {
+    ocultarTodasPantallas();
+    toast('❌ ' + err.message);
+  }
+}
+
+function mostrarModalTipo(tipo) {
+  const modal = document.getElementById('modalTipo');
+  const titulo = document.getElementById('modalTipoTitulo');
+  const opA = document.getElementById('modalOpcionA');
+  const opB = document.getElementById('modalOpcionB');
+
+  if (tipo === 'viaje') {
+    titulo.textContent = '¿Cómo quieres organizar tu libro de viaje?';
+    opA.textContent = '📅 Por días';
+    opB.textContent = '✨ Por momentos';
+  } else {
+    titulo.textContent = '¿Cómo quieres organizar tu libro anual?';
+    opA.textContent = '🌤 Por temporadas';
+    opB.textContent = '📆 Por meses';
+  }
+  ocultarTodasPantallas();
+  modal.style.display = 'flex';
+}
+
+function elegirOrganizacion(opcion) {
+  document.getElementById('modalTipo').style.display = 'none';
+  mostrarPortadas();
+}
+
+function mostrarPortadas() {
+  const lista = document.getElementById('listaPortadas');
+  lista.innerHTML = '';
+
+  portadaOpciones.forEach((op, i) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.cursor = 'pointer';
+    div.innerHTML = `
+      <div style="height:160px;background:var(--g3);border-radius:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:var(--g2);font-size:0.8rem;">
+        📷 ${op.foto || 'Vista previa'}
+      </div>
+      <h4 style="font-family:'Lora',serif;">${op.titulo || ''}</h4>
+      <p style="color:var(--muted);font-size:0.82rem;">${op.subtitulo || ''}</p>
+    `;
+    div.onclick = () => seleccionarPortada(op);
+    lista.appendChild(div);
+  });
+
+  const divBlanco = document.createElement('div');
+  divBlanco.className = 'card';
+  divBlanco.style.cursor = 'pointer';
+  divBlanco.innerHTML = `
+    <div style="height:160px;background:white;border:2px dashed var(--border);border-radius:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.85rem;">
+      ✏️ Empezar en blanco
+    </div>
+    <h4 style="font-family:'Lora',serif;">Personalizar desde cero</h4>
+    <p style="color:var(--muted);font-size:0.82rem;">Elige tu propio título y estilo</p>
+  `;
+  divBlanco.onclick = () => seleccionarPortada({ foto: null, titulo: document.getElementById('titleField').value || 'Mi Álbum', subtitulo: '' });
+  lista.appendChild(divBlanco);
+
+  mostrarPantalla('pantallaPortadas');
+}
+
+function seleccionarPortada(op) {
+  portadaSeleccionada = op;
+  document.getElementById('editTitulo').value = op.titulo || '';
+  document.getElementById('editSubtitulo').value = op.subtitulo || '';
+  mostrarPantalla('pantallaEditarPortada');
+}
+
+async function confirmarPortada() {
+  const titulo = document.getElementById('editTitulo').value;
+  const subtitulo = document.getElementById('editSubtitulo').value;
+
+  mostrarPantalla('pantallaGenerando');
+
+  const formData = new FormData();
+  formData.append('pedido_id', pedidoId);
+  if (portadaSeleccionada.foto) {
+    formData.append('portada_foto', portadaSeleccionada.foto);
+  }
+  formData.append('portada_titulo', titulo);
+  formData.append('portada_subtitulo', subtitulo);
+
+  try {
+    const resp = await fetch(`${API_BASE}/crear-pedido/confirmar`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || !data.ok) {
+      throw new Error(data.detail || data.error || 'Error generando el PDF');
+    }
+
+    document.getElementById('textoExito').textContent = 'Ya puedes revisarlo antes de finalizar tu pedido.';
+    mostrarPantalla('pantallaExito');
+
+  } catch (err) {
+    ocultarTodasPantallas();
+    toast('❌ ' + err.message);
+  }
+}
+
+function ocultarTodasPantallas() {
+  ['modalTipo','pantallaCargando','pantallaPortadas','pantallaEditarPortada','pantallaGenerando','pantallaExito'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+}
+
+function mostrarPantalla(id) {
+  ocultarTodasPantallas();
+  const el = document.getElementById(id);
+  el.style.display = (id === 'pantallaCargando' || id === 'pantallaGenerando') ? 'flex' : 'block';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>10));
+</script>
+</body>
+</html>
