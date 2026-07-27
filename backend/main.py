@@ -181,7 +181,7 @@ async def crear_pedido_propuestas(
 
         # 4. Analizar con IA → capítulos + 2 propuestas de portada (SIN generar PDF)
         print(f"[DEBUG] Llamando a generar_propuestas_portada...")
-      resultado = generar_propuestas_portada(
+        resultado = generar_propuestas_portada(
             fotos_rutas, videos_rutas, titulo_cliente=titulo, formato=formato,
             orientacion=orientacion, packs_extra=packs_extra
         )  
