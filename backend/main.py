@@ -127,7 +127,8 @@ async def crear_pedido_propuestas(
     packs_extra: int = Form(0),
 ):
     print(f"[DEBUG] Petición recibida: pedido_id={pedido_id}, cliente_id={cliente_id}")
-
+    print(f"[DEBUG] Título recibido del frontend: '{titulo}'")
+  
     # Recuperar el refresh_token del cliente desde Supabase.
     # El frontend nunca maneja este dato — solo conoce cliente_id.
     datos_drive = obtener_cliente_drive(cliente_id)
