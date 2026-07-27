@@ -607,7 +607,7 @@ def analizar_con_ia(fotos, dias, titulo_cliente=""):
 
     titulo_info = f'\nEl cliente ya escribió este título para su álbum: "{titulo_cliente}"' if titulo_cliente else ""
     
-    prompt = f"""Eres experto en libros de fotos para Bookeo. Tienes {len(fotos)} fotos del {fecha_ini} al {fecha_fin}.
+    prompt = f"""Eres experto en libros de fotos para Bookeo. Tienes {len(fotos)} fotos del {fecha_ini} al {fecha_fin}.{titulo_info}
 
 TU ÚNICA TAREA: agrupar las fotos en capítulos y proponer 2 opciones de portada. NO decides layouts — eso lo hace Python.
 
