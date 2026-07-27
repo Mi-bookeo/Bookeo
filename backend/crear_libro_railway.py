@@ -679,7 +679,7 @@ def generar_propuestas_portada(fotos_rutas, videos_rutas, titulo_cliente="", for
     Devuelve: dict con 'diseño', 'fotos', 'portada_opciones', 'formato', 'orientacion'
     (formato/orientacion se devuelven para reutilizarlos en generar_pdf_completo)
     """
-   exts_foto = {".jpg",".jpeg",".png",".heic",".heif",".tiff"}
+    exts_foto = {".jpg",".jpeg",".png",".heic",".heif",".tiff"}
     fotos = []
     nombres_vistos = set()
     for ruta in fotos_rutas:
