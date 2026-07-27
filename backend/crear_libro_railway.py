@@ -627,7 +627,8 @@ RESPONDE SOLO JSON compacto:
 
 REGLAS:
 - portada_opciones: EXACTAMENTE 2 propuestas distintas, cada una con una foto candidata diferente (las 2 fotos más impactantes visualmente)
-- Si el cliente escribió un título, ÚSALO como base: las 2 propuestas deben ser variaciones creativas de ESE título (no títulos completamente distintos e inventados). Por ejemplo si el cliente puso "Verano 2024", las propuestas podrían ser "Verano 2024" con un subtítulo evocador, y "Nuestro verano · 2024" con otro subtítulo distinto. Si el cliente no escribió título, entonces sí puedes proponer libremente
+- OBLIGATORIO si el cliente escribió un título: AMBAS propuestas de portada_opciones deben usar como campo "titulo" EXACTAMENTE el texto que escribió el cliente, sin cambiarlo ni una letra. NO inventes un título distinto. Solo puedes variar el campo "subtitulo" entre las 2 propuestas (eso sí es libre y creativo). Si el cliente no escribió ningún título, entonces sí puedes inventar libremente el campo "titulo" en ambas propuestas
+- El campo "titulo" general del JSON (fuera de portada_opciones) también debe ser EXACTAMENTE el título del cliente si lo escribió
 - Todos los nombres de foto deben estar EXACTAMENTE como en el inventario
 - Incluye TODAS las fotos del inventario en algún capítulo
 - Los capítulos deben tener un mínimo de 2 fotos, sin límite máximo — si un capítulo temático (como "Verano" o un mes completo) tiene muchas fotos, mantenlas todas juntas en ese mismo capítulo, no lo dividas artificialmente
