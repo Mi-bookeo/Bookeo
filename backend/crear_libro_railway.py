@@ -581,7 +581,7 @@ def calcular_paginas_por_capitulo(capitulos_con_fotos, paginas_disponibles):
     log(f"Reparto de páginas por capítulo: {paginas_por_capitulo} (objetivo total: {paginas_disponibles})", "📊")
     return paginas_por_capitulo
     
- def paginas_para_capitulo_caso_b(fotos_capitulo, paginas_asignadas, qr_map, texto_titulo="", variante_inicio=0):
+  def paginas_para_capitulo_caso_b(fotos_capitulo, paginas_asignadas, qr_map, texto_titulo="", variante_inicio=0):
     """
     Reparte las fotos de UN capítulo (Caso B, N > P) en páginas,
     respetando los bloques por día siempre que sea posible.
