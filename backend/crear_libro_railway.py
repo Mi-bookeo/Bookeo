@@ -867,7 +867,7 @@ def generar_pdf_completo(diseño, fotos, videos_rutas, qr_urls, portada_elegida,
     nb = nombre_cliente.lower().replace(" ", "_")
     r_final = os.path.join(carpeta_sal, f"bookeo_{nb}.pdf")
 
-   generar_pdf(AW, AH, diseño, fotos_dict, qr_map, r_final, titulo_final, subtitulo,
+    generar_pdf(AW, AH, diseño, fotos_dict, qr_map, r_final, titulo_final, subtitulo,
                 portada_elegida=portada_elegida, do_wm=False,
                 caso_reparto=caso_reparto, paginas_objetivo=paginas_objetivo)
 
