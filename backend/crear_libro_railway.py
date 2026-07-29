@@ -600,7 +600,7 @@ def paginas_para_capitulo_caso_b(fotos_capitulo, paginas_asignadas, qr_map, text
                 "texto": texto_titulo if len(paginas) == 0 else "",
                 "_bloque_id": id(bloque),
             })
-        avance = len(fotos_layout) if fotos_layout else 1
+            avance = len(fotos_layout) if fotos_layout else 1
             idx += avance
             layout_ant = layout
             variante += 1    
