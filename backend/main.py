@@ -243,7 +243,9 @@ async def crear_pedido_confirmar(
     carpeta_sal = str(work_dir / "salida")
 
     try:
-        ruta_pdf = generar_pdf_completo(
+        from starlette.concurrency import run_in_threadpool
+        ruta_pdf = await run_in_threadpool(
+            generar_pdf_completo,
             diseño=datos["diseño"],
             fotos=datos["fotos"],
             videos_rutas=datos["videos_rutas"],
