@@ -206,6 +206,7 @@ def foto_zona(c, ruta, x, y, w, h, check_ppi=True):
     img.save(buf, "JPEG", quality=95)
     buf.seek(0)
     rl = ImageReader(buf)
+    img.close()
     xm, ym, wm, hm = x * mm, y * mm, w * mm, h * mm
     c.saveState()
     p2 = c.beginPath()
