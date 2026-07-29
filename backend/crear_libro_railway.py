@@ -606,8 +606,8 @@ def paginas_para_capitulo_caso_b(fotos_capitulo, paginas_asignadas, qr_map, text
             variante += 1
     log(f"  Capítulo repartido en {len(paginas)} páginas (objetivo: {paginas_asignadas}, bloques por día: {len(bloques)})", "📐")
     return paginas
-    
-    
+  
+
 def paginas_para_grupo(fotos, qr_map, texto="", variante_inicio=0):
     paginas = []
     idx = 0
