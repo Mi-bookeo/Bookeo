@@ -1,4 +1,5 @@
 """
+# forzar rebuild 31-07
 BOOKEO · Celery Worker
 Procesa la generación de libros en paralelo.
 Cada pedido es una tarea independiente.
