@@ -7,6 +7,8 @@ Cada pedido es una tarea independiente.
 
 import os
 from celery import Celery
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 
