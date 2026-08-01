@@ -38,6 +38,7 @@ from subir_drive import procesar_video
 from google_auth import generar_url_autorizacion, intercambiar_codigo_por_token_y_email
 from crear_libro_railway import generar_propuestas_portada
 from supabase_client import obtener_o_crear_cliente, guardar_refresh_token_cliente, obtener_cliente_drive
+from r2_storage import subir_a_r2
 
 app = FastAPI(title="Bookeo Backend", version="1.0.0")
 
