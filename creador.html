@@ -7,6 +7,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+@font-face { font-family: 'Aclonica'; src: url('https://bookeo-production.up.railway.app/fonts/Aclonica-Regular.ttf'); }
+@font-face { font-family: 'Gochi Hand'; src: url('https://bookeo-production.up.railway.app/fonts/GochiHand-Regular.ttf'); }
+@font-face { font-family: 'Grand Hotel'; src: url('https://bookeo-production.up.railway.app/fonts/GrandHotel-Regular.ttf'); }
+@font-face { font-family: 'Just Another Hand'; src: url('https://bookeo-production.up.railway.app/fonts/JustAnotherHand-Regular.ttf'); }
+@font-face { font-family: 'Luckiest Guy'; src: url('https://bookeo-production.up.railway.app/fonts/LuckiestGuy-Regular.ttf'); }
+@font-face { font-family: 'Nerko One'; src: url('https://bookeo-production.up.railway.app/fonts/NerkoOne-Regular.ttf'); }
+@font-face { font-family: 'Notable'; src: url('https://bookeo-production.up.railway.app/fonts/Notable-Regular.ttf'); }
+@font-face { font-family: 'Orbitron'; font-weight: 400; src: url('https://bookeo-production.up.railway.app/fonts/Orbitron-Regular.ttf'); }
+@font-face { font-family: 'Orbitron'; font-weight: 700; src: url('https://bookeo-production.up.railway.app/fonts/Orbitron-Bold.ttf'); }
+@font-face { font-family: 'Orbitron Black'; src: url('https://bookeo-production.up.railway.app/fonts/Orbitron-Black.ttf'); }
+@font-face { font-family: 'Permanent Marker'; src: url('https://bookeo-production.up.railway.app/fonts/PermanentMarker-Regular.ttf'); }
+</style>
+<style>
 :root {
   --g:    #7db898;
   --g2:   #5a9a7a;
@@ -658,11 +671,27 @@ main > *:nth-child(7){animation-delay:.35s;}
         <button type="button" class="txt-tool-btn" id="btnCursiva" onclick="toggleEstiloTexto('italic')" title="Cursiva"><i>C</i></button>
         <button type="button" class="txt-tool-btn" id="btnSubrayado" onclick="toggleEstiloTexto('underline')" title="Subrayado"><u>S</u></button>
         <select id="selectFuente" class="font-select" onchange="cambiarFuenteTexto(this.value)">
-          <option value="'Lora', serif">Lora</option>
-          <option value="'Plus Jakarta Sans', sans-serif">Jakarta Sans</option>
-          <option value="Georgia, serif">Georgia</option>
-          <option value="'Courier New', monospace">Courier</option>
-          <option value="Verdana, sans-serif">Verdana</option>
+          <optgroup label="Clásicas">
+            <option value="'Lora', serif">Lora</option>
+            <option value="'Plus Jakarta Sans', sans-serif">Jakarta Sans</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="'Courier New', monospace">Courier</option>
+            <option value="Verdana, sans-serif">Verdana</option>
+          </optgroup>
+          <optgroup label="Manuscritas">
+            <option value="'Gochi Hand', cursive">Gochi Hand</option>
+            <option value="'Grand Hotel', cursive">Grand Hotel</option>
+            <option value="'Just Another Hand', cursive">Just Another Hand</option>
+            <option value="'Permanent Marker', cursive">Permanent Marker</option>
+          </optgroup>
+          <optgroup label="Títulos gruesos">
+            <option value="'Luckiest Guy', cursive">Luckiest Guy</option>
+            <option value="'Nerko One', cursive">Nerko One</option>
+            <option value="'Notable', sans-serif">Notable</option>
+            <option value="'Aclonica', sans-serif">Aclonica</option>
+            <option value="'Orbitron', sans-serif">Orbitron</option>
+            <option value="'Orbitron Black', sans-serif">Orbitron Black</option>
+          </optgroup>
         </select>
         <input type="color" id="colorTexto" value="#1a1a2e" onchange="cambiarColorTexto(this.value)" title="Color del texto">
       </div>
@@ -723,8 +752,7 @@ main > *:nth-child(7){animation-delay:.35s;}
           <input type="range" id="marcoGrosor" min="2" max="18" value="6" oninput="actualizarMarco()" style="flex:1;">
           <span style="font-size:0.75rem;color:var(--muted);">Grueso</span>
         </div>
-        <div class="section-label" style="margin-top:10px;">Distancia al borde</div>
-        <input type="range" id="marcoMargen" min="4" max="40" value="14" oninput="actualizarMarco()">
+        <p style="font-size:0.75rem;color:var(--muted);margin:8px 0 0;">Arrastra el marco directamente sobre la portada para moverlo o cambiar su tamaño.</p>
         <div class="section-label" style="margin-top:10px;">Color del marco</div>
         <input type="color" id="marcoColor" value="#1a1a2e" oninput="actualizarMarco()">
       </div>
@@ -789,6 +817,7 @@ let activeTextObj = null;
 let fotoPersonalizadaFile = null;
 let cropRect = null;
 let recortando = false;
+let frameControlRect = null;
 
 const FORMATOS_MM_JS = { '2020':[208,208], '2828':[288,288], '2128':[218,288] };
 function obtenerMedidas(formato, ori){
@@ -840,6 +869,7 @@ function inicializarEditorPortada(op){
   frameObjects = [];
   objFoto = null;
   fotoPersonalizadaFile = null;
+  frameControlRect = null;
 
   const estilo = op.estilo || 'completa';
   const lado = Math.min(canvasW, canvasH) * 0.58;
@@ -936,6 +966,12 @@ function cambiarFuenteTexto(fuente){
   if(!activeTextObj){ toast('Toca el título o subtítulo primero'); return; }
   activeTextObj.set('fontFamily', fuente);
   fabricCanvas.requestRenderAll();
+  if(document.fonts && document.fonts.load){
+    const nombreFuente = fuente.split(',')[0].replace(/['"]/g, '').trim();
+    document.fonts.load(`16px "${nombreFuente}"`).then(() => {
+      fabricCanvas.requestRenderAll();
+    }).catch(() => {});
+  }
 }
 
 function cambiarColorTexto(color){
@@ -1057,27 +1093,48 @@ function elegirEstiloMarco(estilo){
   const ajustes = document.getElementById('marcoAjustes');
   if(estilo === 'ninguno'){
     ajustes.style.display = 'none';
+    if(frameControlRect){ fabricCanvas.remove(frameControlRect); frameControlRect = null; }
   } else {
     ajustes.style.display = 'block';
     const esPolaroid = estilo === 'polaroid';
     document.getElementById('marcoGrosor').disabled = esPolaroid;
     document.getElementById('marcoColor').disabled = esPolaroid;
+    if(!frameControlRect){ crearFrameControlRect(); }
   }
   actualizarMarco();
+}
+
+function crearFrameControlRect(){
+  const cw = fabricCanvas.getWidth(), ch = fabricCanvas.getHeight();
+  const m = Math.round(Math.min(cw, ch) * 0.06);
+  frameControlRect = new fabric.Rect({
+    left: m, top: m, width: cw - m*2, height: ch - m*2,
+    fill: 'transparent', stroke: 'rgba(0,150,255,0.6)', strokeWidth: 1,
+    strokeDashArray: [4, 4], cornerColor: '#0096ff', transparentCorners: false,
+    lockRotation: true
+  });
+  frameControlRect.setControlsVisibility({ mtr: false });
+  fabricCanvas.add(frameControlRect);
+  frameControlRect.on('moving', actualizarMarco);
+  frameControlRect.on('scaling', actualizarMarco);
+  frameControlRect.on('modified', actualizarMarco);
 }
 
 function actualizarMarco(){
   if(!fabricCanvas) return;
   frameObjects.forEach(o => fabricCanvas.remove(o));
   frameObjects = [];
-  if(currentFrameStyle === 'ninguno'){ fabricCanvas.requestRenderAll(); return; }
+  if(currentFrameStyle === 'ninguno' || !frameControlRect){ fabricCanvas.requestRenderAll(); return; }
 
-  const cw = fabricCanvas.getWidth(), ch = fabricCanvas.getHeight();
   const grosor = parseInt(document.getElementById('marcoGrosor').value, 10);
-  const margen = parseInt(document.getElementById('marcoMargen').value, 10);
   const color = document.getElementById('marcoColor').value;
-  const base = { left: margen, top: margen, width: cw - margen*2, height: ch - margen*2,
-                 fill: 'transparent', selectable: false, evented: false };
+
+  const left = frameControlRect.left;
+  const top = frameControlRect.top;
+  const width = frameControlRect.width * frameControlRect.scaleX;
+  const height = frameControlRect.height * frameControlRect.scaleY;
+
+  const base = { left, top, width, height, fill: 'transparent', selectable: false, evented: false };
 
   if(currentFrameStyle === 'simple'){
     frameObjects.push(new fabric.Rect({ ...base, stroke: color, strokeWidth: grosor }));
@@ -1087,7 +1144,7 @@ function actualizarMarco(){
     const sep = g * 2.5;
     frameObjects.push(new fabric.Rect({ ...base, stroke: color, strokeWidth: g }));
     frameObjects.push(new fabric.Rect({
-      left: margen+sep, top: margen+sep, width: cw-(margen+sep)*2, height: ch-(margen+sep)*2,
+      left: left+sep, top: top+sep, width: width-sep*2, height: height-sep*2,
       fill: 'transparent', stroke: color, strokeWidth: g, selectable: false, evented: false
     }));
 
@@ -1101,13 +1158,13 @@ function actualizarMarco(){
     }));
 
   } else if(currentFrameStyle === 'ondas'){
-    frameObjects.push(...dibujarMarcoOndas(cw, ch, margen, grosor, color));
+    frameObjects.push(...dibujarMarcoOndas(left, top, width, height, grosor, color));
 
   } else if(currentFrameStyle === 'polaroid'){
-    const borde = Math.max(14, Math.round(cw*0.045));
+    const borde = Math.max(10, Math.round(width*0.045));
     const bordeAbajo = borde * 2.6;
     frameObjects.push(new fabric.Rect({
-      left: borde/2, top: borde/2, width: cw-borde, height: ch-borde-bordeAbajo,
+      left: left+borde/2, top: top+borde/2, width: width-borde, height: height-borde-bordeAbajo,
       fill: 'transparent', stroke: '#ffffff', strokeWidth: borde,
       selectable: false, evented: false
     }));
@@ -1117,36 +1174,37 @@ function actualizarMarco(){
   fabricCanvas.requestRenderAll();
 }
 
-function dibujarMarcoOndas(cw, ch, margen, grosor, color){
+function dibujarMarcoOndas(left, top, width, height, grosor, color){
   const objetos = [];
   const amplitud = Math.max(3, grosor*0.6);
   const paso = amplitud * 3;
+  const x1 = left, x2 = left + width, y1 = top, y2 = top + height;
 
-  function crearPathOndulado(x1, y1, x2, y2, horizontal){
-    let d = `M ${x1} ${y1} `;
-    const longitud = horizontal ? (x2-x1) : (y2-y1);
+  function crearPathOndulado(px1, py1, px2, py2, horizontal){
+    let d = `M ${px1} ${py1} `;
+    const longitud = horizontal ? (px2-px1) : (py2-py1);
     const pasos = Math.max(2, Math.round(Math.abs(longitud) / paso));
     for(let i=1; i<=pasos; i++){
       const t = i/pasos;
       const dir = i % 2 === 0 ? 1 : -1;
       if(horizontal){
-        const x = x1 + (x2-x1)*t;
-        const yc = y1 + dir*amplitud;
-        d += `Q ${x1 + (x2-x1)*(t - 0.5/pasos)} ${yc}, ${x} ${y1} `;
+        const x = px1 + (px2-px1)*t;
+        const yc = py1 + dir*amplitud;
+        d += `Q ${px1 + (px2-px1)*(t - 0.5/pasos)} ${yc}, ${x} ${py1} `;
       } else {
-        const y = y1 + (y2-y1)*t;
-        const xc = x1 + dir*amplitud;
-        d += `Q ${xc} ${y1 + (y2-y1)*(t - 0.5/pasos)}, ${x1} ${y} `;
+        const y = py1 + (py2-py1)*t;
+        const xc = px1 + dir*amplitud;
+        d += `Q ${xc} ${py1 + (py2-py1)*(t - 0.5/pasos)}, ${px1} ${y} `;
       }
     }
     return d;
   }
 
   const paths = [
-    crearPathOndulado(margen, margen, cw-margen, margen, true),
-    crearPathOndulado(margen, ch-margen, cw-margen, ch-margen, true),
-    crearPathOndulado(margen, margen, margen, ch-margen, false),
-    crearPathOndulado(cw-margen, margen, cw-margen, ch-margen, false),
+    crearPathOndulado(x1, y1, x2, y1, true),
+    crearPathOndulado(x1, y2, x2, y2, true),
+    crearPathOndulado(x1, y1, x1, y2, false),
+    crearPathOndulado(x2, y1, x2, y2, false),
   ];
   paths.forEach(d => {
     objetos.push(new fabric.Path(d, {
@@ -1165,11 +1223,14 @@ function obtenerEstadoEditorPortada(){
     canvas_w: fabricCanvas.getWidth(),
     canvas_h: fabricCanvas.getHeight(),
     color_fondo: document.getElementById('colorFondo').value,
-    marco: currentFrameStyle === 'ninguno' ? null : {
+    marco: (currentFrameStyle === 'ninguno' || !frameControlRect) ? null : {
       estilo: currentFrameStyle,
       grosor: parseInt(document.getElementById('marcoGrosor').value, 10),
-      margen: parseInt(document.getElementById('marcoMargen').value, 10),
       color: document.getElementById('marcoColor').value,
+      left: frameControlRect.left,
+      top: frameControlRect.top,
+      width: frameControlRect.width * frameControlRect.scaleX,
+      height: frameControlRect.height * frameControlRect.scaleY,
     },
     foto: objFoto ? {
       left: objFoto.left, top: objFoto.top,
