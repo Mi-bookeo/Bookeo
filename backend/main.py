@@ -485,6 +485,8 @@ async def merge_videos(
         shutil.rmtree(work_dir, ignore_errors=True)
         raise
     except Exception as e:
+        print(f"[DEBUG /merge] ERROR: {e}")
+        print(traceback.format_exc())
         shutil.rmtree(work_dir, ignore_errors=True)
         raise HTTPException(status_code=500, detail=f"Error interno: {e}")
 
