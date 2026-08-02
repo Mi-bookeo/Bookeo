@@ -413,12 +413,17 @@ async def merge_videos(
                 clip = VideoFileClip(str(path))
                 if clips:
                     w, h = clips[0].size
-                    if clip.size != (w, h):
-                        clip = clip.resize((w, h))
+                else:
+                    w, h = clip.size
+                # x264 exige ancho/alto pares — forzamos números pares siempre
+                w = w - (w % 2)
+                h = h - (h % 2)
+                if clip.size != (w, h):
+                    clip = clip.resize((w, h))
                 clips.append(clip)
             except Exception as e:
                 raise HTTPException(status_code=422, detail=f"Error leyendo vídeo: {e}")
-
+              
         final_video = concatenate_videoclips(clips, method="compose")
 
         music_path: Optional[Path] = None
