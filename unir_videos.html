@@ -653,7 +653,12 @@
     if (hasMusicUpload)  formData.append('music_file', musicFile);
     if (hasMusicAuto)    formData.append('music_genre', selectedGenre);
 
-    // Progreso visual
+    // Progreso visual - la duración se ajusta al peso total de los vídeos
+    const totalBytes = Object.values(videoFiles).reduce((sum, f) => sum + f.size, 0);
+    const totalMB = totalBytes / (1024 * 1024);
+    const duracionEstimadaMs = Math.min(150000, Math.max(20000, totalMB * 1500));
+    const intervaloMs = duracionEstimadaMs / (steps.length - 1);
+
     let stepIdx = 0;
     const progressInterval = setInterval(() => {
       if (stepIdx < steps.length - 1) {
@@ -661,7 +666,7 @@
         txt.textContent = steps[stepIdx].text;
         stepIdx++;
       }
-    }, 2500);
+    }, intervaloMs);
 
     try {
       // ⚠️ CAMBIA ESTA URL por tu endpoint de Railway
