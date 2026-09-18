@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valora tu experiencia · Bookeo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g: #7db898;
+  --g2: #5a9a7a;
+  --g3: #e8f5ee;
+  --g4: #f0faf5;
+  --dark: #1a1a2e;
+  --text: #2e2e3a;
+  --muted: #7a7a8a;
+  --border: #e2dfd8;
+  --cream: #faf8f3;
+  --white: #ffffff;
+  --shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+.card {
+  background: var(--white);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  max-width: 460px;
+  width: 100%;
+  padding: 36px 28px;
+  text-align: center;
+}
+.logo {
+  font-family: 'Lora', serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--dark);
+  margin-bottom: 20px;
+}
+h1 {
+  font-family: 'Lora', serif;
+  font-size: 1.5rem;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.sub {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-bottom: 26px;
+  line-height: 1.5;
+}
+.estrellas {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.estrella {
+  font-size: 2.4rem;
+  cursor: pointer;
+  color: var(--border);
+  transition: transform .15s, color .15s;
+  user-select: none;
+  line-height: 1;
+}
+.estrella.activa { color: #f5b942; }
+.estrella:hover { transform: scale(1.12); }
+textarea {
+  width: 100%;
+  min-height: 100px;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  resize: vertical;
+  margin-bottom: 20px;
+}
+textarea:focus { outline: none; border-color: var(--g); }
+.btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 50px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-principal {
+  background: var(--g);
+  color: white;
+  box-shadow: 0 6px 20px rgba(125,184,152,0.35);
+}
+.btn-principal:disabled {
+  background: var(--border);
+  color: var(--muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.btn-google {
+  background: var(--dark);
+  color: white;
+  margin-top: 14px;
+}
+.pantalla { display: none; }
+.pantalla.activa { display: block; }
+.icono-resultado { font-size: 2.6rem; margin-bottom: 12px; }
+.error-msg {
+  color: #c0392b;
+  font-size: 0.82rem;
+  margin-top: 10px;
+  min-height: 18px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- ═══ PANTALLA 1: ELEGIR ESTRELLAS + COMENTARIO ═══ -->
+  <div class="pantalla activa" id="pantallaFormulario">
+    <div class="logo">📖 Bookeo</div>
+    <h1>¿Qué tal tu experiencia?</h1>
+    <p class="sub">Tu opinión nos ayuda muchísimo a mejorar.</p>
+
+    <div class="estrellas" id="contEstrellas">
+      <span class="estrella" data-valor="1">★</span>
+      <span class="estrella" data-valor="2">★</span>
+      <span class="estrella" data-valor="3">★</span>
+      <span class="estrella" data-valor="4">★</span>
+      <span class="estrella" data-valor="5">★</span>
+    </div>
+
+    <textarea id="comentario" placeholder="Cuéntanos qué te ha parecido (opcional)"></textarea>
+
+    <button class="btn btn-principal" id="btnEnviar" disabled>Enviar valoración</button>
+    <p class="error-msg" id="errorMsg"></p>
+  </div>
+
+  <!-- ═══ PANTALLA 2A: 4-5 ESTRELLAS ═══ -->
+  <div class="pantalla" id="pantallaContento">
+    <div class="icono-resultado">🎉</div>
+    <h1>¡Gracias por tu valoración!</h1>
+    <p class="sub">Nos alegra muchísimo saber que te ha gustado tu álbum. Si tienes un segundo más, nos ayudaría un montón que lo contaras también en Google — así llegamos a más familias como la tuya.</p>
+    <a class="btn btn-google" id="btnGoogle" href="#" target="_blank" rel="noopener">⭐ Escribir reseña en Google</a>
+  </div>
+
+  <!-- ═══ PANTALLA 2B: MENOS DE 4 ESTRELLAS ═══ -->
+  <div class="pantalla" id="pantallaSentimos">
+    <div class="icono-resultado">💛</div>
+    <h1>Sentimos que no haya sido perfecto</h1>
+    <p class="sub">Hemos recibido tu comentario y vamos a revisarlo con calma. Si quieres contarnos algo más o necesitas ayuda con tu pedido, escríbenos a <strong>info@mibookeo.es</strong> — queremos arreglarlo contigo.</p>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DESARROLLADOR: pon aquí el enlace real de "escribir una reseña"
+// de vuestra ficha de Google Business Profile.
+// ══════════════════════════════════════════════════════════════
+const URL_RESENA_GOOGLE = 'https://g.page/r/PON-AQUI-TU-ID-DE-GOOGLE/review';
+
+const BACKEND_URL = 'https://bookeo-production.up.railway.app';
+
+// Datos identificativos del cliente - vienen en la URL del correo de
+// valoración (ver enviar_correo_valoracion_cupones), nunca escritos a
+// mano por el cliente.
+const params = new URLSearchParams(location.search);
+const nombreCliente = params.get('nombre') || '';
+const correoCliente = params.get('correo') || '';
+const numeroPedido = params.get('pedido') || '';
+
+let estrellasElegidas = 0;
+
+document.querySelectorAll('.estrella').forEach((el) => {
+  el.addEventListener('click', () => {
+    estrellasElegidas = parseInt(el.dataset.valor, 10);
+    document.querySelectorAll('.estrella').forEach((e2) => {
+      e2.classList.toggle('activa', parseInt(e2.dataset.valor, 10) <= estrellasElegidas);
+    });
+    document.getElementById('btnEnviar').disabled = false;
+  });
+});
+
+document.getElementById('btnEnviar').onclick = async () => {
+  if (!estrellasElegidas) return;
+  const btn = document.getElementById('btnEnviar');
+  const errorMsg = document.getElementById('errorMsg');
+  const comentario = document.getElementById('comentario').value.trim();
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  errorMsg.textContent = '';
+
+  try {
+    const resp = await fetch(BACKEND_URL + '/enviar-valoracion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        estrellas: estrellasElegidas,
+        comentario: comentario || null,
+        nombre: nombreCliente || null,
+        correo: correoCliente || null,
+        numero_pedido: numeroPedido || null,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.ok) throw new Error(data.detail || 'No se pudo enviar');
+
+    document.getElementById('pantallaFormulario').classList.remove('activa');
+    if (estrellasElegidas >= 4) {
+      document.getElementById('btnGoogle').href = URL_RESENA_GOOGLE;
+      document.getElementById('pantallaContento').classList.add('activa');
+    } else {
+      document.getElementById('pantallaSentimos').classList.add('activa');
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Enviar valoración';
+    errorMsg.textContent = '⚠️ No se pudo enviar, inténtalo de nuevo.';
+  }
+};
+</script>
+
+</body>
+</html>
