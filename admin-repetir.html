@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookeo · Enviar enlace de repetir pedido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g:    #7db898;
+  --g2:   #5a9a7a;
+  --dark: #1a1a2e;
+  --text: #2e2e3a;
+  --muted:#7a7a8a;
+  --border:#e2dfd8;
+  --cream:#faf8f3;
+  --white:#ffffff;
+  --rojo: #c0392b;
+}
+*{box-sizing:border-box;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;margin:0;}
+.wrap{max-width:400px;margin:0 auto;padding:40px 18px;}
+.titulo-pagina{font-family:'Lora',serif;font-size:1.25rem;color:var(--dark);margin-bottom:6px;text-align:center;}
+.subtitulo-pagina{font-size:0.82rem;color:var(--muted);text-align:center;margin-bottom:26px;}
+.card{background:var(--white);border-radius:14px;padding:20px;box-shadow:0 3px 14px rgba(26,26,46,.05);}
+label{display:block;font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.03em;}
+input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:0.9rem;margin-bottom:16px;}
+input:focus{outline:none;border-color:var(--g);}
+.btn-enviar{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:13px 20px;background:var(--g2);color:var(--white);border:none;border-radius:50px;
+  font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;
+}
+.btn-enviar:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+.btn-enviar:not(:disabled):hover{background:var(--dark);}
+.aviso{display:none;border-radius:10px;padding:12px 14px;font-size:0.82rem;margin-top:14px;line-height:1.5;text-align:center;}
+.aviso.ok{display:block;background:#eef7f1;color:var(--g2);}
+.aviso.error{display:block;background:#fdf2f1;color:var(--rojo);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="titulo-pagina">Enviar enlace de repetir pedido</div>
+  <div class="subtitulo-pagina">Manda al cliente el correo con el enlace para subir su PDF y repetir el álbum.</div>
+
+  <div class="card">
+    <label for="inputCorreo">Correo del cliente</label>
+    <input type="email" id="inputCorreo" placeholder="cliente@correo.com" autocomplete="off">
+
+    <button type="button" class="btn-enviar" id="btnEnviar">Enviar correo</button>
+
+    <div class="aviso" id="aviso"></div>
+  </div>
+</div>
+
+<script>
+const BACKEND_URL = 'https://bookeo-production.up.railway.app';
+
+// Esta página es solo tuya (no está enlazada en ningún sitio), así que la
+// clave va puesta aquí directamente - tiene que ser EXACTAMENTE la misma
+// que pongas en Railway como variable ADMIN_REPETIR_CLAVE. Si algún día
+// la cambias en Railway, cámbiala también aquí.
+const CLAVE_ADMIN = 'repetir16021823';
+
+const btn = document.getElementById('btnEnviar');
+const aviso = document.getElementById('aviso');
+
+function mostrarAviso(tipo, texto) {
+  aviso.className = 'aviso ' + tipo;
+  aviso.textContent = texto;
+}
+
+btn.onclick = async () => {
+  const correo = document.getElementById('inputCorreo').value.trim();
+
+  if (!correo) { mostrarAviso('error', 'Escribe el correo del cliente.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  aviso.className = 'aviso';
+
+  try {
+    const formData = new FormData();
+    formData.append('correo', correo);
+    formData.append('clave', CLAVE_ADMIN);
+    const resp = await fetch(BACKEND_URL + '/admin/enviar-repetir-pedido', { method: 'POST', body: formData });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.detail || 'No se pudo enviar');
+
+    mostrarAviso('ok', `✅ Correo enviado a ${correo}`);
+    document.getElementById('inputCorreo').value = '';
+  } catch (e) {
+    mostrarAviso('error', '⚠️ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enviar correo';
+  }
+};
+</script>
+
+</body>
+</html>
