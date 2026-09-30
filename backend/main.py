@@ -107,6 +107,9 @@ from admin_panel import router as admin_panel_router, registrar_manejadores
 app.include_router(admin_panel_router)
 registrar_manejadores(app)
 
+from probar_gelato_router import router as probar_gelato_router
+app.include_router(probar_gelato_router)
+
 FONTS_DIR = Path(__file__).parent / "fonts"
 FONTS_DIR.mkdir(exist_ok=True)
 app.mount("/fonts", StaticFiles(directory=str(FONTS_DIR)), name="fonts")
