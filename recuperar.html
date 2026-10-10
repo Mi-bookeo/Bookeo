@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Bookeo · Continuar mi pedido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--g:#7db898;--g2:#5a9a7a;--dark:#1a1a2e;--text:#2e2e3a;--muted:#7a7a8a;--cream:#faf8f3;--white:#fff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.caja{background:var(--white);border-radius:16px;padding:32px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 3px 14px rgba(26,26,46,.06);}
+h1{font-family:'Lora',serif;font-size:1.15rem;color:var(--dark);margin-bottom:10px;}
+p{font-size:.88rem;color:var(--muted);line-height:1.6;}
+.rueda{width:34px;height:34px;border:3px solid #e2dfd8;border-top-color:var(--g);border-radius:50%;margin:0 auto 16px;animation:gira 1s linear infinite;}
+@keyframes gira{to{transform:rotate(360deg);}}
+.btn{display:inline-block;margin-top:18px;background:var(--g);color:#fff;text-decoration:none;font-weight:700;font-size:.9rem;padding:12px 28px;border-radius:50px;border:none;cursor:pointer;font-family:inherit;}
+</style>
+</head>
+<body>
+<div class="caja" id="caja">
+  <div class="rueda" id="rueda"></div>
+  <h1 id="titulo">Recuperando tu pedido…</h1>
+  <p id="texto">Un momento, estamos preparando tu libro para que puedas terminar el pedido.</p>
+</div>
+
+<script>
+const BACKEND_URL = 'https://bookeo-production.up.railway.app';
+
+function mostrar(titulo, texto, enlace, textoEnlace) {
+  document.getElementById('rueda').style.display = 'none';
+  document.getElementById('titulo').textContent = titulo;
+  document.getElementById('texto').textContent = texto;
+  if (enlace) {
+    const a = document.createElement('a');
+    a.className = 'btn';
+    a.href = enlace;
+    a.textContent = textoEnlace;
+    document.getElementById('caja').appendChild(a);
+  }
+}
+
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const pedido = params.get('p');
+  const token = params.get('t');
+  if (!pedido || !token) {
+    mostrar('Enlace no válido', 'Este enlace está incompleto. Si lo copiaste a mano, vuelve a abrirlo desde el correo.', 'creador.html', 'Crear un álbum');
+    return;
+  }
+  try {
+    const resp = await fetch(BACKEND_URL + '/crear-pedido/recuperar?pedido=' + encodeURIComponent(pedido) + '&t=' + encodeURIComponent(token));
+    if (resp.status === 403) {
+      mostrar('Enlace no válido', 'No hemos podido comprobar este enlace. Abre el botón del correo directamente.', 'creador.html', 'Crear un álbum');
+      return;
+    }
+    const d = await resp.json();
+    if (!d.ok) {
+      if (d.motivo === 'pagado') {
+        mostrar('Este pedido ya está pagado', 'Ya lo tenemos y está en marcha. Revisa tu correo: ahí tienes la confirmación.');
+      } else if (d.motivo === 'caducado') {
+        mostrar('Este pedido ha caducado', 'Por espacio, borramos los álbumes sin pagar a los 7 días. Puedes crear uno nuevo cuando quieras.', 'creador.html', 'Crear un álbum');
+      } else {
+        mostrar('No encontramos tu álbum', 'Es posible que ya se haya borrado. Escríbenos a info@mibookeo.es y lo miramos.', 'creador.html', 'Crear un álbum');
+      }
+      return;
+    }
+
+    // Se vuelve a montar el pedido tal como lo deja pago.html al pulsar
+    // "Continuar", para que pago.html lo encuentre como si el cliente
+    // volviera de "← Editar datos": libros con su PDF, y nombre/correo/
+    // teléfono rellenos. La dirección no se guarda en ningún sitio, así
+    // que se vuelve a escribir.
+    const libros = d.libros.map((l) => ({
+      titulo: l.titulo || 'Mi álbum', portada: '', aw: l.aw || 208, ah: l.ah || 208,
+      packs: l.packs || 0, cantidad: l.cantidad || 1, tarea_id: '', pedido_id: l.pedido_id || '',
+      desde_cero: false, tipo_libro: 'recuperado', pdf_r2: l.pdf_r2,
+      // El visor de pago.html pide el PDF a esta ruta (con el token del enlace).
+      visor_url: '/ver-pdf-recuperado?pedido=' + encodeURIComponent(d.numero_pedido) + '&t=' + encodeURIComponent(token) + '&libro=' + encodeURIComponent(l.pedido_id || ''),
+    }));
+    localStorage.setItem('bookeo_pedido_confirmar', JSON.stringify({
+      pedido_id: libros[libros.length - 1].pedido_id,
+      numero_pedido: d.numero_pedido,
+      libros: libros,
+      envio: { nombre: d.nombre || '', correo: d.correo || '', telefono: d.telefono || '' },
+      total: 0,
+    }));
+    localStorage.setItem('bookeo_numero_pedido_pendiente', d.numero_pedido);
+    if (d.cliente_id) localStorage.setItem('bookeo_cliente_id', d.cliente_id);
+    window.location.replace('pago.html');
+  } catch (e) {
+    mostrar('No se pudo conectar', 'Revisa tu conexión e inténtalo de nuevo.', window.location.href, 'Reintentar');
+  }
+})();
+</script>
+</body>
+</html>
