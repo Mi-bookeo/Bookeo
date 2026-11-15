@@ -2603,6 +2603,11 @@ function crearFrameControlRect(){
 
 function actualizarMarco(){
   if(!fabricCanvas) return;
+  // Se guarda en qué posición de la pila de capas estaba el marco ANTES de
+  // quitarlo: si no, al volver a dibujarlo (mover, cambiar tamaño, grosor o
+  // color) se iba siempre arriba del todo y tapaba el sticker/foto/texto que
+  // el cliente hubiera puesto encima.
+  const indiceCapaMarco = frameObjects.length ? fabricCanvas.getObjects().indexOf(frameObjects[0]) : -1;
   frameObjects.forEach(o => fabricCanvas.remove(o));
   frameObjects = [];
   if(currentFrameStyle === 'ninguno' || !frameControlRect){ fabricCanvas.requestRenderAll(); return; }
@@ -2617,6 +2622,9 @@ function actualizarMarco(){
 
   frameObjects = construirPiezasMarco(currentFrameStyle, left, top, width, height, grosor, color);
   frameObjects.forEach(o => fabricCanvas.add(o));
+  if(indiceCapaMarco >= 0){
+    frameObjects.forEach((o, k) => fabricCanvas.moveTo(o, indiceCapaMarco + k));
+  }
   fabricCanvas.requestRenderAll();
 }
 
