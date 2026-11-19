@@ -1576,6 +1576,40 @@ def dibujar_portada(c, AW, AH, ruta, titulo, subtitulo, do_wm, editor=None):
         wm(c, AW * mm, AH * mm)
 
 
+_TINTA_TEXTO_CACHE = {}
+
+
+def _tinta_texto_em(fuente, texto):
+    """
+    Cuánto SUBE y cuánto BAJA la tinta real del texto respecto a su línea
+    base, en unidades de em (1.0 = el tamaño de la letra). Sirve para
+    centrar el texto del lomo en su grosor de verdad - drawCentredString
+    solo centra a lo largo, y en vertical deja la línea base justo en el
+    centro, con lo que todo el texto quedaba desplazado hacia un lado.
+    Las fuentes propias se miden con PIL sobre el propio archivo de la
+    fuente; para las estándar (Helvetica...) se usan proporciones típicas.
+    """
+    clave = (fuente, texto)
+    if clave in _TINTA_TEXTO_CACHE:
+        return _TINTA_TEXTO_CACHE[clave]
+    res = None
+    archivo = FUENTES_DISPONIBLES.get(fuente)
+    if archivo and texto:
+        try:
+            from PIL import ImageFont
+            fnt = ImageFont.truetype(os.path.join(_FONTS_DIR, archivo), 200)
+            _l, _t, _r, _b = fnt.getbbox(texto, anchor="ls")
+            sube, baja = max(0.0, -_t / 200.0), max(0.0, _b / 200.0)
+            if sube + baja >= 0.3:
+                res = (sube, baja)
+        except Exception:
+            res = None
+    if res is None:
+        res = (0.72, 0.21 if any(ch in "gjpqyçÇ,;()" for ch in texto) else 0.0)
+    _TINTA_TEXTO_CACHE[clave] = res
+    return res
+
+
 def dibujar_lomo(c, AW, AH, titulo, color_fondo=None, do_wm=False, editor=None):
     aw, ah = AW * mm, AH * mm
 
@@ -1633,10 +1667,35 @@ def dibujar_lomo(c, AW, AH, titulo, color_fondo=None, do_wm=False, editor=None):
     # grosor real del lomo (con margen a cada lado), con un mínimo
     # legible - si ni así cabe, se seguirá viendo pequeño pero SIEMPRE
     # dentro del lomo, nunca fuera de él.
-    margen_lomo_mm = 1.2
-    fontsize_mm = min(4.0, max(2.2, aw / mm - margen_lomo_mm * 2))
+    #
+    # Margen libre a cada lado según lo grueso que sea el lomo (a más
+    # páginas, más margen), y tamaño calculado para que TODA la tinta del
+    # texto (de lo más alto a lo más bajo, con tildes y letras con rabito)
+    # ocupe justo lo que queda. Nunca más pequeño que el tamaño de antes.
+    ancho_lomo_mm = aw / mm
+    if ancho_lomo_mm <= 11:
+        margen_lomo_mm = 1.5
+    elif ancho_lomo_mm <= 16:
+        margen_lomo_mm = 2.0
+    else:
+        margen_lomo_mm = 2.5
+    sube_em, baja_em = _tinta_texto_em(fuente, texto_lomo)
+    tinta_em = max(0.3, sube_em + baja_em)
+    fontsize_antes_mm = min(4.0, max(2.2, ancho_lomo_mm - 1.2 * 2))
+    fontsize_mm = (ancho_lomo_mm - margen_lomo_mm * 2) / tinta_em
+    fontsize_mm = max(fontsize_mm, min(fontsize_antes_mm, max(1.0, ancho_lomo_mm - 1.6) / tinta_em))
+    fontsize_mm = min(fontsize_mm, 10.0)
+    # Un título largo no puede salirse del alto del libro: se encoge lo justo.
+    ancho_texto_mm = c.stringWidth(texto_lomo, fuente, fontsize_mm * mm) / mm
+    if ancho_texto_mm > (ah / mm) * 0.8:
+        fontsize_mm *= ((ah / mm) * 0.8) / ancho_texto_mm
     c.setFont(fuente, fontsize_mm * mm)
-    c.drawCentredString(0, 0, texto_lomo)
+    # Línea base desplazada para que la tinta quede centrada en el grosor
+    # del lomo (el eje vertical del texto girado apunta hacia la contraportada).
+    y_base_mm = -(sube_em - baja_em) * fontsize_mm / 2
+    log(f"Lomo: ancho {ancho_lomo_mm:.1f} mm, margen {margen_lomo_mm} mm, letra {fontsize_mm:.2f} mm "
+        f"(antes {fontsize_antes_mm:.2f} mm), texto {texto_lomo!r}", "i")
+    c.drawCentredString(0, y_base_mm * mm, texto_lomo)
     c.restoreState()
     if do_wm:
         wm(c, aw, ah)
